@@ -347,7 +347,7 @@ datinteger32=: 3 : 0"1
 gc sqlgetdata (b0 y),SQL_INTEGER;(,256);4;,0
 )
 datinteger64=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_INTEGER;(4$' ');5;,0
+z=. gc sqlgetdata (b0 y),SQL_INTEGER;(4${.a.);4;,0
 if. sqlok z do.
   (<fat _2&ic >1{z) 1} z
 else.
@@ -357,7 +357,7 @@ end.
 
 datinteger=: ('datinteger',SFX)~ f.
 datsmallint=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_SMALLINT;(2$' ');3;,0
+z=. gc sqlgetdata (b0 y),SQL_SMALLINT;(2${.a.);2;,0
 if. sqlok z do.
   (<fat _1&ic >1{z) 1} z
 else.
@@ -365,7 +365,12 @@ else.
 end.
 )
 datbit=: 3 : 0"1
-gc sqlgetdata (b0 y),SQL_DEFAULT;(1$' ');1;,0
+z=. gc sqlgetdata (b0 y),SQL_CHAR;(1${.a.);1;,0
+if. sqlok z do.
+  (<a.&i. fat >1{z) 1} z
+else.
+  z
+end.
 )
 datreal=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_CHAR;(4$' ');4;,0
