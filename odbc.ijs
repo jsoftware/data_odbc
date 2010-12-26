@@ -15,6 +15,7 @@ sqlconnect=: (libodbc, ' SQLConnect s x *c s *c s *c s') &cd
 sqldatasources=: (libodbc, ' SQLDataSources s x s *c s *s *c s *s') &cd
 sqldescribecol=: (libodbc, ' SQLDescribeCol s x s *c s *s *s *i *s *s') &cd
 sqldisconnect=: (libodbc, ' SQLDisconnect s x') &cd
+sqldriverconnect=: (libodbc, ' SQLDriverConnect s x x *c s *c s *s s') &cd
 sqldrivers=: (libodbc, ' SQLDrivers s x s *c s *s *c s *s') &cd
 sqlendtran=: (libodbc, ' SQLEndTran s s x s') &cd
 sqlexecdirect=: (libodbc, ' SQLExecDirect s x *c i') &cd
@@ -444,7 +445,6 @@ else.
 end.
 )
 
-sqldriverconnect=: 'odbc32 SQLDriverConnect s x x *c s *c s *s s' &cd
 SQL_DRIVER_NOPROMPT=: 0
 
 ddcon=: 3 : 0  
