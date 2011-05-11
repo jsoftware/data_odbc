@@ -3,10 +3,11 @@ NB.
 NB. includes bigint
 
 NMS=: ;: 'Anne Brenda Carol Denise Esther Fanny'
-require 'stats'
+NB. require 'stats'
+toss=: ? @ (# #) { ]
 
 NB. =========================================================
-tcreate=: 3 : 0
+testdb=: 3 : 0
 
 NB. 1099511627776 _35184372088832 1125899906842624
 abc=. 1 _1 1 * <. 2^40 45 50
@@ -50,5 +51,5 @@ empty dddis sh,CH
 dbg 1
 dbstops''
 NB. dbstops 'ddins'
-tcreate ''
+testdb ''
 
