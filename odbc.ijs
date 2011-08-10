@@ -833,10 +833,14 @@ SQL_ROLLBACK comrbk y
 )
 
 ddttrn=: 3 : 0"0
-if. y e. CHALL do.
-  y e. CHTR
+if. _1~: y do.
+  if. y e. CHALL do.
+    y e. CHTR
+  else.
+    0
+  end.
 else.
-  0
+  0~:#CHTR
 end.
 )
 erasebind=: 3 : 0"0
@@ -969,7 +973,7 @@ end.
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
 if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' do.
-  bugflag=.  bugflag (23 b.) BUGFLAG_BULKOPERATIONS   
+  bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS   
 end.
 
 DBMSALL=: DBMSALL, y; r=. 'ODBC';dsn;uid;server;name;ver;drvname;drvver;charset;chardiv;bugflag
