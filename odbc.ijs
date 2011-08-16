@@ -1269,41 +1269,55 @@ freestmt sh
 z
 )
 parsesqlparm=: 3 : 0
-y=. deb y
 fmt=. 0  
-if. ('insert into' ; 'select into') e.~ <tolower 11{.y do. ix=. 11 [ fmt=. 1
+if. ('insert into' ; 'select into') e.~ <tolower 11{.y=. dlb y do. ix=. 11 [ fmt=. 1
+elseif. 'insert ' -: tolower 7{.y do. ix=. 6 [ fmt=. 1
 elseif. 'delete from' -: tolower 11{.y do. ix=. 11
 elseif. 'update' -: tolower 6{.y do. ix=. 6
 elseif. do. ix=. _1
 end.
 if. _1~:ix do.
-  table=. a{.~ +/@:(*./\)@:-.@:(e.&' ,(') a=. dlb ix}.y
+  table=. ({.~ i.&' ') dlb ix}. ' ' (I.y e.'()')}y
 else.
   table=. ''
 end.
 if. 1=fmt do.
-  if. 1 e. ivb=. (')values(' E. ly) +. (')values (' E. ly) +. (') values(' E. ly) +. (') values (' E. ly) [[ ly=. tolower y do. iv=. 1 i.~ ivb else. fmt=. 0 end.
-end.
-len=. +/@:(*./\)@:-.@:(e.&' ,')@:|.&> a=. (('=?' E. y) +. ('= ?' E. y)) <;._2 y
-parm1=. (-len) {.&.> a
-parm=. 0$<''
-for_b. parm1 do.
-  b1=. >b
-  if. ('(' e. b1) *. ')' e. b1 do.
-    parm=. parm , < }.(}.~ i:&'(') ({.~ i:&')') b1
-  else.
-    parm=. parm, b
-  end.
+  if. 1 e. ivb=. ' values ' E. tolower ' ' (I.y e.'()')}y do. iv=. {.I.ivb else. fmt=. 0 end.
 end.
 if. 0=fmt do.
-  (<table), parm
+  y1=. y
+  f1=. (0=(2&|)) +/\ ''''=y1  
+  f2=. (> 0:,}:) f1           
+  f2=. 0,}.f2                 
+  y1=. ' ' (I.-.f1)}y1        
+  y1=. ' ' (I.f2)}y1          
+  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1    
+  y1=. ' ' (I.f1 *. ','=y1)}y1    
+  y1=. ' ' (I.y1 e.'()')}y1    
+  y1=. (' where ';', where ';' WHERE ';', WHERE ';' and ';', and ';' AND ';', AND ';' or ';', or ';' OR ';', OR ') stringreplace (deb y1) , ','  
+  a=. (',' = y1) <;._2 y1
+  b=. (#~ ('='&e. *. '?'&e.)&>) a
+  c=. ({.~ i:&'=')&.> b
+  parm=. dtb&.> ({.~ i.&' ')&.|.&.> c
 else.
-  c=. '(' i:~ b=. y{.~ iv
-  fld=. <@dltb ;._1 ',', (1+c)}.b
-  'c d'=. '()' i.~ b=. y}.~ 1+iv
-  pval=. (<,'?') = <@dltb ;._1 ',', (1+c)}.d{.b
-  (<table), (pval (# :: (''"_)) fld), parm
+  fld=. <@dltb;._1 ',', ' ' (I.a e.'()')} a=. (}.~ i.&'(') y{.~ iv
+
+  y1=. y}.~ iv + #' values '
+  f1=. (0=(2&|)) +/\ ''''=y1  
+  f2=. (> 0:,}:) f1           
+  f2=. 0,}.f2                 
+  y1=. ' ' (I.-.f1)}y1        
+  y1=. ' ' (I.f2)}y1          
+  y1=. }.}:dltb y1            
+  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1    
+  y1=. ' ' (I.f1 *. ','=y1)}y1    
+  y1=. ' ' (I.y1 e.'()')}y1    
+  y1=. (deb y1),','   
+  a=. <;._2 y1
+  msk=. ('?'&e.)&> a
+  parm=. ((#fld){.msk)#fld
 end.
+table;parm
 )
 ddinsemu=: 4 : 0
 clr 0
