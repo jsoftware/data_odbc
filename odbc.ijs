@@ -83,14 +83,14 @@ sqlsetenvattr=: (libodbc, ' SQLSetEnvAttr s x i x i') &cd
 sqlsetstmtattr=: (libodbc, ' SQLSetStmtAttr s x i x i') &cd
 sqltables=: (libodbc, ' SQLTables s x *c s *c s *c s *c s') &cd
 sqlcolattribute=: (libodbc, ' SQLColAttribute s x s s *c s *s *') &cd
-ISI01=: 'ISI01 Too many connections'  
-ISI02=: 'ISI02 Too many statements'   
+ISI01=: 'ISI01 Too many connections'
+ISI02=: 'ISI02 Too many statements'
 ISI03=: 'ISI03 Bad connection handle'
 ISI04=: 'ISI04 Bad statement handle'
 ISI05=: 'ISI05 Not a select command'
 ISI06=: 'ISI06 Transactions not supported'
 ISI07=: 'ISI07 Bad transaction state'
-ISI08=: 'ISI08 Bad arguments'         
+ISI08=: 'ISI08 Bad arguments'
 ISI09=: 'ISI09 Unsupported data type'
 ISI10=: 'ISI10 Unable to bind all columns'
 ISI11=: 'ISI11 Unable to initialize ODBC environment'
@@ -120,7 +120,7 @@ SQL_NEED_DATA=: 99
 SQL_MAX_DSN_LENGTH=: 32
 SQL_COMMIT=: 0
 SQL_ROLLBACK=: 1
-SQL_NTS=: _3                     
+SQL_NTS=: _3
 SQL_HANDLE_ENV=: 1
 SQL_HANDLE_DBC=: 2
 SQL_HANDLE_STMT=: 3
@@ -129,13 +129,13 @@ SQL_FETCH_NEXT=: 1
 SQL_FETCH_FIRST=: 2
 SQL_ATTR_ODBC_VERSION=: 200
 SQL_OV_ODBC3=: 3
-SQL_ATTR_ROW_BIND_TYPE=: 5       
-SQL_BIND_BY_COLUMN=: 0           
+SQL_ATTR_ROW_BIND_TYPE=: 5
+SQL_BIND_BY_COLUMN=: 0
 SQL_ATTR_ROWS_FETCHED_PTR=: 26
 SQL_ATTR_ROW_ARRAY_SIZE=: 27
 SQL_ATTR_ROW_STATUS_PTR=: 25
-SQL_ATTR_AUTOCOMMIT=: 102        
-SQL_AUTOCOMMIT_OFF=: 0           
+SQL_ATTR_AUTOCOMMIT=: 102
+SQL_AUTOCOMMIT_OFF=: 0
 SQL_ROWSET_SIZE=: 9
 SQL_IS_UINTEGER=: _5
 
@@ -167,9 +167,9 @@ SQL_CURSOR_DYNAMIC=: 2
 SQL_ATTR_CONCURRENCY=: 7
 SQL_CONCUR_LOCK=: 2
 SQL_PARAM_INPUT=: 1
-COLUMNBUF=: 1000     
-LONGBUF=: 500000     
-SHORTBUF=: 255       
+COLUMNBUF=: 1000
+LONGBUF=: 500000
+SHORTBUF=: 255
 MAXARRAYSIZE=: 65535
 char_trctnb=: ]`trctnb @. (2:=3!:0)
 trctnb=: <:@{:@$ {."1 (i.&({.a.) {. ])"1
@@ -179,7 +179,7 @@ trctnob=: [: rebtbcol ] -."1 (0{a.)"_
 trctguid=: 36&{."1
 
 nullvec2mat=: 3 : '> a: -.~ deb each <;._2 y,{.a.'
-SZI=: IF64{4 8     
+SZI=: IF64{4 8
 SFX=: >IF64{'32';'64'
 b0=: <"0
 bs=: ];#
@@ -233,7 +233,7 @@ elseif. type e. SQL_SMALLINT do.
 elseif. type e. SQL_TYPE_TIMESTAMP do.
   len=. 16 [ tartype=. SQL_DEFAULT
   (bname)=: (rows,len)$' '
-elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.  
+elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
   len=. fat >: +: precision [ tartype=. SQL_CHAR
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_DOUBLE,SQL_FLOAT do.
@@ -259,7 +259,7 @@ DD_OK=: 0
 
 fmtdts=: 3 : 0
 d=. dts y
-b=. ({:"1 d ) <: 60 
+b=. ({:"1 d ) <: 60
 s=. $d=. (4,5#3) ": b *"0 1 d
 d=. , d
 d=. s$'0'(I. ' '=d)}d
@@ -277,8 +277,8 @@ else.
   't h'=. y
   if. SQL_ERROR-:em=. t getlasterror h do. r return.
   elseif. c=. #em do.
-    LERR=: fmterr {. em   
-    ALLDM=: em             
+    LERR=: fmterr {. em
+    ALLDM=: em
     if. 1<c do. LERR=: LERR , ' - more error info available (1)' end.
   end.
 end.
@@ -289,15 +289,15 @@ clr=: 3 : 0
 LERR=: ''
 ALLDM=: i. 0 0
 )
-ddconfig=: 3 : 0  
+ddconfig=: 3 : 0
 clr 0
 0
 )
-dddriver=: 3 : 0  
+dddriver=: 3 : 0
 clr 0
 'ODBC'
 )
-dddrv=: 3 : 0  
+dddrv=: 3 : 0
 clr 0
 d=. EH;SQL_FETCH_FIRST
 n=. EH;SQL_FETCH_NEXT
@@ -312,7 +312,7 @@ while.do.
 end.
 (trbuclnb {."1 r),.nullvec2mat &.> {:"1 r
 )
-ddsrc=: 3 : 0  
+ddsrc=: 3 : 0
 clr 0
 d=. EH;SQL_FETCH_FIRST
 n=. EH;SQL_FETCH_NEXT
@@ -331,7 +331,7 @@ end.
 trbuclnb r
 )
 
-ddtbl=: 3 : 0  
+ddtbl=: 3 : 0
 clr 0
 if. -. isia y do. errret ISI08 return. end.
 if. -. y e. CHALL do. errret ISI03 return. end.
@@ -346,7 +346,7 @@ else.
 end.
 )
 
-ddtblx=: 3 : 0  
+ddtblx=: 3 : 0
 if. SQL_ERROR-:sh=. ddtbl y do. SQL_ERROR
 elseif. SQL_ERROR-:dat=. ddfch sh,_1 do. SQL_ERROR
 elseif. 0<>./ #&> dat do. trctnob@:":&.> dat
@@ -356,7 +356,7 @@ end.
 ddcheck=: 3 : 0
 if. _1=y do. wdinfo 'Data Driver';dderr $0 else. y end.
 )
-ddcol=: 4 : 0  
+ddcol=: 4 : 0
 clr 0
 w=. y
 if. -. (iscl x) *. isia w=. fat w do. errret ISI08 return. end.
@@ -405,7 +405,7 @@ freeenv=: 3 : 0
 sqlfreehandle SQL_HANDLE_ENV;y
 )
 
-gc=: 0 4 6&{  
+gc=: 0 4 6&{
 tdatchar=: 3 : 0"1
 sqlgetdata (b0 y),SQL_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
 )
@@ -473,7 +473,7 @@ sc=. b0 y
 get=. sc,SQL_BINARY;(LONGBUF$' ');LONGBUF;,0
 
 z=. sqlgetdata get
-lim=. a:{ >{:z  
+lim=. a:{ >{:z
 dat=. ''
 while. lim>:#dat do.
   if. sqlbad rc=. >{. z do. SQL_ERROR;'';0 return. end.
@@ -481,7 +481,7 @@ while. lim>:#dat do.
   dat=. dat , (LONGBUF<.>{:z) {. , >4{z
   z=. sqlgetdata get
 end.
-DD_OK ; dat ; #dat  
+DD_OK ; dat ; #dat
 )
 getchar=: datchar&.>
 getwchar=: datwchar&.>
@@ -506,11 +506,11 @@ gettype_timestamp=: dattimestamp&.>
 getuniqueid=: datchar&.>
 
 iad=: 3 : 0
-ple=. 15!:6 <y         
-pa=. memr ple,SZI,1 4  
-''$pa+memr pa,0 1 4    
+ple=. 15!:6 <y
+pa=. memr ple,SZI,1 4
+''$pa+memr pa,0 1 4
 )
-vad=: <@:iad  
+vad=: <@:iad
 getcolinfo=: 3 : 0"1
 arg=. (b0 y),(bs 128$' '),5#<,0
 z=. sqldescribecol arg
@@ -527,7 +527,7 @@ end.
 
 SQL_DRIVER_NOPROMPT=: 0
 
-ddcon=: 3 : 0  
+ddcon=: 3 : 0
 f=. (i.&';')({. ; }.@}.) ]
 clr 0
 if. -.iscl y do. errret ISI08 return. end.
@@ -573,13 +573,13 @@ dddbms HDBC
 HDBC
 )
 
-dddis=: 3 : 0"0   
+dddis=: 3 : 0"0
 clr 0
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
 if. -. w e. CHALL do. errret ISI03 return. end.
 if. #shs=. 1{"1 CSPALL#~w=0{"1 CSPALL do. ddend shs end.
-ch=. w 
+ch=. w
 if. sqlbad sqldisconnect w do. errret SQL_HANDLE_DBC,ch return. end.
 if. sqlbad sqlfreehandle SQL_HANDLE_DBC;y do. errret '' return. end.
 CHALL=: CHALL-.ch
@@ -588,7 +588,7 @@ DBMSALL=: DBMSALL#~ch~:>0{("1) DBMSALL
 DD_OK
 )
 
-ddsel=: 4 : 0  
+ddsel=: 4 : 0
 clr 0
 if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
 if. -.w e. CHALL do. errret ISI03 return. end.
@@ -609,7 +609,7 @@ else.
 end.
 )
 
-ddsql=: 4 : 0  
+ddsql=: 4 : 0
 clr DDROWCNT=: 0
 if. -.(isia y) *. iscl x do. errret ISI08 return. end.
 if. -.y e.CHALL do. errret ISI03 return. end.
@@ -625,11 +625,11 @@ else.
 end.
 )
 
-ddcnt=: 3 : 0  
+ddcnt=: 3 : 0
 DDROWCNT
 )
 
-ddend=: 3 : 0"0  
+ddend=: 3 : 0"0
 clr 0
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
@@ -647,7 +647,7 @@ clr 0
 if. -.(isia x) *. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,1
 if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
-r=. (r<0){r,_1  
+r=. (r<0){r,_1
 if. SQL_ERROR-:ci=. getallcolinfo sh do. errret '' return. end.
 assert. 10={:@$ ci
 buf=. (_1=r){r,x
@@ -688,8 +688,8 @@ assert. 1= # ~. #&> dat
 dat
 )
 
-ddbind=: 3 : 0  
-COLUMNBUF ddbind y 
+ddbind=: 3 : 0
+COLUMNBUF ddbind y
 :
 clr 0
 if. -.(isia x) *. isiu y do. errret ISI08 return. end.
@@ -697,7 +697,7 @@ if. -.(isia x) *. isiu y do. errret ISI08 return. end.
 if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
 if. SQL_ERROR-:ci=. getallcolinfo sh do. errret ''
 elseif. sqlbad ci dbind sh,r do. SQL_ERROR
-elseif.do. DD_OK [ ('BINDTI_',":sh)=: ci  
+elseif.do. DD_OK [ ('BINDTI_',":sh)=: ci
 end.
 )
 
@@ -708,7 +708,7 @@ z=. (6 7{"1 x) bindcol (0{y),.(>: i.#x),.1{y
 if. *./(src ; 0{"1 z) e. DD_SUCCESS do. DD_OK else. errret ISI10 end.
 )
 
-ddfetch=: 3 : 0  
+ddfetch=: 3 : 0
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
 if. -.w e.1{"1 CSPALL do. errret ISI04 return. end.
@@ -724,7 +724,7 @@ BADTYPES=: hd , (trbuclnb ":&.> dat) ,. alltrim&.> tnames
 x ,' - more error info available (2)'
 )
 
-dddata=: 3 : 0  
+dddata=: 3 : 0
 ".'BIND_',(":0{y),'_',":1{y
 )
 dddataln=: 3 : 0
@@ -734,16 +734,16 @@ dddataln=: 3 : 0
 dddcnt=: 3 : 0
 ".'BINDRR_',":y
 )
-ddrow=: dddcnt 
+ddrow=: dddcnt
 
 initodbcenv=: 3 : 0
-CHTR=: CHALL=: i.0  
-CSPALL=: 0 2$0      
-DBMSALL=: 0 12$<''  
-LERR=: ''           
-ALLDM=: i. 0 3      
-BADTYPES=: i. 0 0   
-DDROWCNT=: 0        
+CHTR=: CHALL=: i.0
+CSPALL=: 0 2$0
+DBMSALL=: 0 12$<''
+LERR=: ''
+ALLDM=: i. 0 3
+BADTYPES=: i. 0 0
+DDROWCNT=: 0
 z=. sqlallochandle SQL_HANDLE_ENV;0;,0
 EH=: fat >3{z
 if. sqlbad z do.
@@ -776,11 +776,11 @@ set=. 0&= @: (4!:0)
 if. set <'CHTR' do. if. #CHTR do. ddrbk CHTR end. end.
 if. set <'CSPALL' do. if. #CSPALL do. ddend {:"1 CSPALL end. end.
 if. set <'CHALL' do. if. #CHALL do. dddis CHALL end. end.
-if. set <'EH' do. freeenv EH end.  
+if. set <'EH' do. freeenv EH end.
 erase ;:'CSPALL CHALL EH'
 )
 
-ddcnm=: 3 : 0  
+ddcnm=: 3 : 0
 clr 0
 w=. y
 if. -. isia w=. fat w do. errret ISI08 return. end.
@@ -790,7 +790,7 @@ assert. 10={:@$ ci
 trbuclnb 3{"1 ci
 )
 
-dderr=: 3 : 0  
+dderr=: 3 : 0
 0 dderr y
 :
 select. x
@@ -800,7 +800,7 @@ case.do. LERR
 end.
 )
 
-ddtrn=: 3 : 0  
+ddtrn=: 3 : 0
 clr 0
 w=. fat y
 if. -. isia w=. fat w do. errret ISI08 return. end.
@@ -822,12 +822,12 @@ if. -. w e. CHTR do. errret ISI07 return. end.
 if. sqlok x transact w do. DD_OK else. errret SQL_HANDLE_DBC,w end.
 )
 
-ddcom=: 3 : 0  
+ddcom=: 3 : 0
 clr 0
 SQL_COMMIT comrbk y
 )
 
-ddrbk=: 3 : 0  
+ddrbk=: 3 : 0
 clr 0
 SQL_ROLLBACK comrbk y
 )
@@ -850,7 +850,7 @@ if. b=. #n=. 'B' (4!:1) 0 do. *./(4!:55) n #~ +./"1 (,:'_',":,y) E. > n else. b 
 dcolbind=: 3 : 0
 'sh r'=. y
 bstname=. 'BINDST_',":sh
-if. IF64 do.  
+if. IF64 do.
   (bstname)=: r$2-2
 else.
   (bstname)=: (r,2)$' '
@@ -880,12 +880,12 @@ else.
 end.
 )
 
-ddfet=: 3 : 0  
+ddfet=: 3 : 0
 clr 0
 if. -. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,1
 if. -. sh e.1{"1 CSPALL do. errret ISI04 return. end.
-r=. (r<0){r,_1  
+r=. (r<0){r,_1
 if. SQL_ERROR-:ci=. getallcolinfo sh do.
   errret ''
 else.
@@ -900,10 +900,10 @@ ddbtype=: 3 : 0
 )
 
 'UCS2 UCS4 UTF8 OEMCP'=: i.4
-BUGFLAG_BINDPARMBIGINT=: 8       
-BUGFLAG_WCHAR_SUTF8=: 16            
-BUGFLAG_LONGVARBINARY_BINARY=: 128  
-BUGFLAG_BULKOPERATIONS=: 256        
+BUGFLAG_BINDPARMBIGINT=: 8
+BUGFLAG_WCHAR_SUTF8=: 16
+BUGFLAG_LONGVARBINARY_BINARY=: 128
+BUGFLAG_BULKOPERATIONS=: 256
 
 SQL_DATA_SOURCE_NAME=: 2
 SQL_DBMS_NAME=: 17
@@ -930,7 +930,7 @@ else.
 end.
 rz
 )
-dddbms=: 3 : 0  
+dddbms=: 3 : 0
 if. -. isia y=. fat y do. errret ISI08 return. end.
 if. -.y e. CHALL do. errret ISI03 return. end.
 ch=. y
@@ -940,7 +940,7 @@ if. ch e. >0{("1) DBMSALL do.
   return.
 end.
 bugflag=. 0
-chardiv=. 1  
+chardiv=. 1
 charset=. IFUNIX{OEMCP,UTF8
 dsn=. ch getinfo2~ SQL_DATA_SOURCE_NAME, charset
 uid=. ch getinfo2~ SQL_USER_NAME, charset
@@ -957,11 +957,11 @@ name=. ('interbase'-:tolower name){:: name ; 'InterBase'
 name=. ('oracle'-:tolower name){:: name ; 'Oracle'
 name=. ('mysql'-:tolower name){:: name ; 'MYSQL'
 
-if. drvname -: 'libtdsodbc.so' do.   
+if. drvname -: 'libtdsodbc.so' do.
   charset=. UTF8
   chardiv=. 4
   bugflag=. bugflag (23 b.) BUGFLAG_WCHAR_SUTF8
-elseif. name -: 'SQLite' do.         
+elseif. name -: 'SQLite' do.
   charset=. UTF8
   chardiv=. 4
   bugflag=. bugflag (23 b.) BUGFLAG_LONGVARBINARY_BINARY
@@ -973,7 +973,7 @@ end.
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
 if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' do.
-  bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS   
+  bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS
 end.
 
 DBMSALL=: DBMSALL, y; r=. 'ODBC';dsn;uid;server;name;ver;drvname;drvver;charset;chardiv;bugflag
@@ -1005,7 +1005,7 @@ while.do.
   end.
   dat=. dat , 1 {&> row
 
-  if. 0=r=. <:r do. break. end.  
+  if. 0=r=. <:r do. break. end.
   z=. sqlfetch sh
 end.
 dat
@@ -1269,7 +1269,7 @@ freestmt sh
 z
 )
 parsesqlparm=: 3 : 0
-fmt=. 0  
+fmt=. 0
 if. ('insert into' ; 'select into') e.~ <tolower 11{.y=. dlb y do. ix=. 11 [ fmt=. 1
 elseif. 'insert ' -: tolower 7{.y do. ix=. 6 [ fmt=. 1
 elseif. 'delete from' -: tolower 11{.y do. ix=. 11
@@ -1286,15 +1286,15 @@ if. 1=fmt do.
 end.
 if. 0=fmt do.
   y1=. y
-  f1=. (0=(2&|)) +/\ ''''=y1  
-  f2=. (> 0:,}:) f1           
-  f2=. 0,}.f2                 
-  y1=. ' ' (I.-.f1)}y1        
-  y1=. ' ' (I.f2)}y1          
-  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1    
-  y1=. ' ' (I.f1 *. ','=y1)}y1    
-  y1=. ' ' (I.y1 e.'()')}y1    
-  y1=. (' where ';', where ';' WHERE ';', WHERE ';' and ';', and ';' AND ';', AND ';' or ';', or ';' OR ';', OR ') stringreplace (deb y1) , ','  
+  f1=. (0=(2&|)) +/\ ''''=y1
+  f2=. (> 0:,}:) f1
+  f2=. 0,}.f2
+  y1=. ' ' (I.-.f1)}y1
+  y1=. ' ' (I.f2)}y1
+  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1
+  y1=. ' ' (I.f1 *. ','=y1)}y1
+  y1=. ' ' (I.y1 e.'()')}y1
+  y1=. (' where ';', where ';' WHERE ';', WHERE ';' and ';', and ';' AND ';', AND ';' or ';', or ';' OR ';', OR ') stringreplace (deb y1) , ','
   a=. (',' = y1) <;._2 y1
   b=. (#~ ('='&e. *. '?'&e.)&>) a
   c=. ({.~ i:&'=')&.> b
@@ -1303,16 +1303,16 @@ else.
   fld=. <@dltb;._1 ',', ' ' (I.a e.'()')} a=. (}.~ i.&'(') y{.~ iv
 
   y1=. y}.~ iv + #' values '
-  f1=. (0=(2&|)) +/\ ''''=y1  
-  f2=. (> 0:,}:) f1           
-  f2=. 0,}.f2                 
-  y1=. ' ' (I.-.f1)}y1        
-  y1=. ' ' (I.f2)}y1          
-  y1=. }.}:dltb y1            
-  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1    
-  y1=. ' ' (I.f1 *. ','=y1)}y1    
-  y1=. ' ' (I.y1 e.'()')}y1    
-  y1=. (deb y1),','   
+  f1=. (0=(2&|)) +/\ ''''=y1
+  f2=. (> 0:,}:) f1
+  f2=. 0,}.f2
+  y1=. ' ' (I.-.f1)}y1
+  y1=. ' ' (I.f2)}y1
+  y1=. }.}:dltb y1
+  f1=. 0< (([: +/\ '('&=) - ([: +/\ ')'&=)) y1
+  y1=. ' ' (I.f1 *. ','=y1)}y1
+  y1=. ' ' (I.y1 e.'()')}y1
+  y1=. (deb y1),','
   a=. <;._2 y1
   msk=. ('?'&e.)&> a
   parm=. ((#fld){.msk)#fld
@@ -1351,7 +1351,7 @@ if. (,a:)-:tbl do.
   elseif. do. errret ISI08 return. end.
   tbl=. < tbl -. '+/()*,-.:;=?@\^_`{|}'''
 end.
-if. (1~:#tbl) +. a: e. tbl do.  
+if. (1~:#tbl) +. a: e. tbl do.
   errret ISI52 return.
 end.
 if. (<:#x)~:#ty do.
@@ -1401,7 +1401,7 @@ if. 2=$$tyln do.
     assert. 0
   end.
 else.
-  sqlty=. tyln [ lns=. (#tyln)#_2 
+  sqlty=. tyln [ lns=. (#tyln)#_2
 end.
 if. ''-:ty do.
   ty=. sqlty
@@ -1432,7 +1432,7 @@ for_i. i.ncol do.
   select. i{ty
   case. SQL_TINYINT;SQL_SMALLINT;SQL_INTEGER;SQL_BIGINT do.
     try.
-      (bname)=: a=. (2-2) + <. ,.@, >(of+i){x  
+      (bname)=: a=. (2-2) + <. ,.@, >(of+i){x
     catch.
       erasebind sh [ freestmt sh [ r=. errret ISI51
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -1460,7 +1460,7 @@ for_i. i.ncol do.
     end.
   case. SQL_DOUBLE;SQL_FLOAT;SQL_REAL;SQL_DECIMAL;SQL_NUMERIC do.
     try.
-      (bname)=: a=. (_&<.) ,.@, >(of+i){x  
+      (bname)=: a=. (_&<.) ,.@, >(of+i){x
     catch.
       erasebind sh [ freestmt sh [ r=. errret ISI51
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -1499,7 +1499,7 @@ for_i. i.ncol do.
       r return.
     end.
     if. _2 ~: i{lns do. colsize=. i{lns [ a=. (({:@$a)<.i{lns){.("1) a else. colsize=. {.@{:@$a end.
-    if. 0=colsize do. colsize=. 1 [ a=. (1,~ {.@$a)$u:' ' end.  
+    if. 0=colsize do. colsize=. 1 [ a=. (1,~ {.@$a)$u:' ' end.
     (bname)=: (1+colsize)&{.("1) a
     if. colsize do.
       (blname)=: nrows$colsize
@@ -1516,21 +1516,21 @@ for_i. i.ncol do.
       case. <'{d ' do. fm=. SQL_TYPE_DATE
       case. <'{t ' do. fm=. SQL_TYPE_TIME
       case. <'{ts' do. fm=. SQL_TYPE_TIMESTAMP
-      case. do.  
+      case. do.
         select. i{ty
         case. SQL_TYPE_DATE do.
           fm=. i{ty
-          if. -. '{' e. tolower {."1 a do.  
+          if. -. '{' e. tolower {."1 a do.
             a=. ('{d ''') ,("1 1) (10{."1 a) ,("1 1) '''}'
           end.
         case. SQL_TYPE_TIME do.
           fm=. i{ty
-          if. -. '{' e. tolower {."1 a do.  
+          if. -. '{' e. tolower {."1 a do.
             a=. ('{t ''') ,("1 1) (11}."1 a) ,("1 1) '''}'
           end.
         case. SQL_TYPE_TIMESTAMP do.
           fm=. i{ty
-          if. -. '{' e. tolower {."1 a do.  
+          if. -. '{' e. tolower {."1 a do.
             a=. ('{ts ''') ,("1 1) a ,("1 1) '''}'
           end.
         end.
@@ -1617,29 +1617,29 @@ DDROWCNT=: rowcnt
 DD_OK
 )
 SQL_SUPPORTED_NAMES=: (];._2) 0 : 0
-0 
-SQL_CHAR=: 1['*'           
-SQL_NUMERIC=: 2['*'        
-SQL_DECIMAL=: 3['*'        
-SQL_INTEGER=: 4['*'        
-SQL_SMALLINT=: 5['*'       
-SQL_FLOAT=: 6['*'          
-SQL_REAL=: 7['*'           
-SQL_DOUBLE=: 8['*'         
-SQL_TYPE_TIMESTAMP=:93['*' 
-SQL_VARCHAR=: 12['*'       
-SQL_DEFAULT=: 99['*'       
-SQL_LONGVARCHAR=: _1       
-SQL_BINARY=: _2['*'        
-SQL_VARBINARY=: _3['*'     
-SQL_LONGVARBINARY=:_4      
-SQL_BIGINT=: _5['*'        
-SQL_TINYINT=: _6['*'       
-SQL_BIT=: _7['*'           
-SQL_WCHAR=: _8['*'         
-SQL_WVARCHAR=: _9['*'      
-SQL_WLONGVARCHAR=: _10     
-SQL_UNIQUEID=:_11['*'      
+0
+SQL_CHAR=: 1['*'
+SQL_NUMERIC=: 2['*'
+SQL_DECIMAL=: 3['*'
+SQL_INTEGER=: 4['*'
+SQL_SMALLINT=: 5['*'
+SQL_FLOAT=: 6['*'
+SQL_REAL=: 7['*'
+SQL_DOUBLE=: 8['*'
+SQL_TYPE_TIMESTAMP=:93['*'
+SQL_VARCHAR=: 12['*'
+SQL_DEFAULT=: 99['*'
+SQL_LONGVARCHAR=: _1
+SQL_BINARY=: _2['*'
+SQL_VARBINARY=: _3['*'
+SQL_LONGVARBINARY=:_4
+SQL_BIGINT=: _5['*'
+SQL_TINYINT=: _6['*'
+SQL_BIT=: _7['*'
+SQL_WCHAR=: _8['*'
+SQL_WVARCHAR=: _9['*'
+SQL_WLONGVARCHAR=: _10
+SQL_UNIQUEID=:_11['*'
 )
 settypeinfo=: 3 : 0
 sqlnames=. }. SQL_SUPPORTED_NAMES
