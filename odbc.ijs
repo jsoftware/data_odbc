@@ -51,7 +51,8 @@ EMPTY
 select. UNAME
 case. 'Linux' do. libodbc=: 'libodbc.so.1'
 case. 'Darwin' do. libodbc=: 'libiodbc.dylib'
-case. do. libodbc=: 'odbc32'
+case. 'Win' do. libodbc=: 'odbc32'
+case. do. libodbc=: ''
 end.
 i.0 0
 )
@@ -1690,7 +1691,7 @@ if. 0=4!:0<'ODBCSETZLOCALE' do.
   if. 0=ODBCSETZLOCALE do. setz=. 0 end.
 end.
 
-if. setz do.
+if. setz *. *#libodbc do.
   settypeinfo 0
   endodbcenv 0
   setzlocale 0
