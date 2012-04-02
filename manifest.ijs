@@ -10,7 +10,7 @@ VERSION=: '1.0.2'
 
 RELEASE=: 'j701'
 
-PLATFORMS=: 'linux win'
+PLATFORMS=: ''
 
 FILES=: 0 : 0
 history.txt
