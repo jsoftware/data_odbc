@@ -506,11 +506,7 @@ getwlongvarchar=: datlong&.>
 gettype_timestamp=: dattimestamp&.>
 getuniqueid=: datchar&.>
 
-iad=: 3 : 0
-ple=. 15!:6 <y
-pa=. memr ple,SZI,1 4
-''$pa+memr pa,0 1 4
-)
+iad=: 15!:14@boxopen
 vad=: <@:iad
 getcolinfo=: 3 : 0"1
 arg=. (b0 y),(bs 128$' '),5#<,0
