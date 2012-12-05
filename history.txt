@@ -11,3 +11,6 @@ data/odbc - change history
 
 == 1.0.3 ==
  * does not run under android
+
+== 1.0.4 ==
+ * s/wdinfo/smifno/
