@@ -6,9 +6,9 @@ DESCRIPTION=: 0 : 0
 Accessing database using odbc api
 )
 
-VERSION=: '1.0.4'
+VERSION=: '1.0.5'
 
-RELEASE=: 'j701'
+RELEASE=: 'j701 j801'
 
 PLATFORMS=: ''
 
