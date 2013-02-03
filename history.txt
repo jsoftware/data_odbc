@@ -16,4 +16,4 @@ data/odbc - change history
  * s/wdinfo/sminfo/
 
 == 1.0.5 ==
- * j801
+ * chg: update for j801
