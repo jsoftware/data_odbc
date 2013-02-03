@@ -1,14 +1,4 @@
 
-3 : 0''
-if. IFJ6 do.
-  script_z_ '~system\main\dates.ijs'
-  script_z_ '~system\main\dll.ijs'
-  script_z_ '~system\main\files.ijs'
-  script_z_ '~system\main\strings.ijs'
-end.
-EMPTY
-)
-
 coclass 'jdd'
 
 InitDone=: 0
