@@ -807,7 +807,14 @@ w=. y
 if. -. isia w=. fat w do. errret ISI08 return. end.
 if. -. w e. CHALL do. errret ISI03 return. end.
 if. -. w e. CHTR do. errret ISI07 return. end.
-if. sqlok x transact w do. DD_OK else. errret SQL_HANDLE_DBC,w end.
+if. sqlok x transact w do.
+  if. sqlok sqlsetconnectattr w;SQL_ATTR_AUTOCOMMIT;SQL_AUTOCOMMIT_ON;SQL_IS_UINTEGER do.
+    DD_OK; ''
+  else.
+    errret SQL_HANDLE_DBC,w
+  end.
+  DD_OK
+else. errret SQL_HANDLE_DBC,w end.
 )
 
 ddcom=: 3 : 0
