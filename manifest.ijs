@@ -8,7 +8,7 @@ Accessing database using odbc api
 
 VERSION=: '1.0.7'
 
-RELEASE=: 'j701 j801'
+RELEASE=: 'j802'
 
 PLATFORMS=: ''
 
