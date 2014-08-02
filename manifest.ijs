@@ -6,11 +6,11 @@ DESCRIPTION=: 0 : 0
 Accessing database using odbc api
 )
 
-VERSION=: '1.0.8'
+VERSION=: '1.0.9'
 
 RELEASE=: 'j802'
 
-PLATFORMS=: ''
+PLATFORMS=: 'win linux darwin'
 
 FILES=: 0 : 0
 history.txt
