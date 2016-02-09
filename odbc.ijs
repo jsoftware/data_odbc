@@ -30,7 +30,10 @@ setzlocale=: 3 : 0
 wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-wrds=. >;: wrds ,' dddriver ddconfig ddcoltype'
+wrds=. wrds ,' dddriver ddconfig ddcoltype'
+wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
+wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. > ;: wrds
 
 cl=. '_jdd_'
 ". (wrds ,"1 '_z_ =: ',"1 wrds ,"1 cl) -."1 ' '
@@ -2180,6 +2183,12 @@ else.
   <'{t ''' ,("1) (fmttdtsn 0 (I. DateTimeNull=y)}y) ,("1) '''}'
 end.
 )
+getDateTimeNull=: 3 : 'DateTimeNull'
+getNumericNull=: 3 : 'NumericNull'
+getUseErrRet=: 3 : 'UseErrRet'
+getUseDayNo=: 3 : 'UseDayNo'
+getUseUnicode=: 3 : 'UseUnicode'
+getCHALL=: 3 : 'CHALL'
 setzface=: 3 : 0
 r=. i. 0 0
 if. (<'base') -: cl=. 18!:5 '' do. r

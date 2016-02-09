@@ -4,7 +4,10 @@ ODBCSETZLOCALE__=: 0
 wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-wrds=. ;: wrds ,' dddriver ddconfig'
+wrds=. wrds ,' dddriver ddconfig ddcoltype'
+wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
+wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. > ;: wrds
 4!:55 wrds ,&.> <'_z_'
 18!:55 <'jdd'
 
