@@ -84,6 +84,8 @@ sqlsetenvattr=: (libodbc, ' SQLSetEnvAttr s x i x i') &cd
 sqlsetstmtattr=: (libodbc, ' SQLSetStmtAttr s x i x i') &cd
 sqltables=: (libodbc, ' SQLTables s x *c s *c s *c s *c s') &cd
 sqlcolattribute=: (libodbc, ' SQLColAttribute s x s s *c s *s *') &cd
+sqlgetconnectattra=: (libodbc, ' SQLGetConnectAttr s x i * i *i') &cd
+sqlsetconnectattra=: (libodbc, ' SQLSetConnectAttr s x x x x') &cd
 bindcol=: 4 : 0"1 1
 'sh col rows'=. y
 'type precision'=. x
@@ -1051,6 +1053,41 @@ end.
 
 DBMSALL=: DBMSALL, y; r=. 'ODBC';dsn;uid;server;name;ver;drvname;drvver;charset;chardiv;bugflag
 r
+)
+ddgetconnectattr=: 4 : 0
+clr 0
+if. 'ODBC' -.@-: dddriver'' do. errret ISI14 return. end.
+if. -. isia y=. fat y do. errret ISI08 return. end.
+if. -. isia x=. fat x do. errret ISI08 return. end.
+if. -.y e. CHALL do. errret ISI03 return. end.
+ch=. y
+attr=. x
+if. sqlok z=. sqlgetconnectattra ch;x;(SZI#{.a.);SZI;(,-0) do.
+  try.
+    z=. (IF64{_2 _3)&ic SZI{. 3{::z
+  catch.
+    errret ISI08 return.
+  end.
+else.
+  errret SQL_HANDLE_DBC,ch return.
+end.
+z
+)
+ddsetconnectattr=: 4 : 0
+clr 0
+if. 'ODBC' -.@-: dddriver'' do. errret ISI14 return. end.
+if. -. isia y=. fat y do. errret ISI08 return. end.
+if. -. isiu x=. ,x do. errret ISI08 return. end.
+if. 2~:#x do. errret ISI08 return. end.
+if. -.y e. CHALL do. errret ISI03 return. end.
+ch=. y
+'attr val'=. x
+if. sqlok z=. sqlsetconnectattra ch;attr;val;SQL_IS_UINTEGER do.
+  z=. ''
+else.
+  errret SQL_HANDLE_DBC,ch return.
+end.
+z
 )
 getdata=: 4 : 0
 'sh r'=. y
@@ -2197,7 +2234,7 @@ else.
   wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
   wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
   wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-  wrds=. >;: wrds ,' dddriver ddconfig ddcoltype'
+  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype'
   ". (wrds ,"1 '_z_ =: ',"1 wrds ,"1 cl) -."1 ' '
   r
 end.
@@ -2207,7 +2244,7 @@ cl=. '_jdd_'
   wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
   wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
   wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-  wrds=. >;: wrds ,' dddriver ddconfig ddcoltype'
+  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
 )
