@@ -51,8 +51,8 @@ EMPTY
 select. UNAME
 case. 'Linux' do. libodbc=: 'libodbc.so.1'
 case. 'Darwin' do. libodbc=: 'libiodbc.dylib'
-case. 'Win' do. libodbc=: 'odbc32'
-case. do. libodbc=: ''
+case. 'Win' do. libodbc=: 'odbc32.dll'
+case. do. libodbc=: 'libodbc.so'
 end.
 i.0 0
 )
@@ -831,6 +831,8 @@ LERR=: ''
 ALLDM=: i. 0 3
 BADTYPES=: i. 0 0
 DDROWCNT=: 0
+
+if. 2 0-.@-:(libodbc ,' dummy > n')&cd ::cder'' do. DD_OK return. end.
 z=. sqlallochandle SQL_HANDLE_ENV;0;,0
 EH=: fat >3{z
 if. sqlbad z do.
