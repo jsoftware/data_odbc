@@ -48,8 +48,11 @@ initodbcenv 0
 EMPTY
 )
 3 : 0''
+if. 0~: 4!:0<'PREFER_IODBC' do.
+  PREFER_IODBC=. 0
+end.
 select. UNAME
-case. 'Linux' do. libodbc=: 'libodbc.so.1'
+case. 'Linux' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.so.2';'libodbc.so.1'
 case. 'Darwin' do. libodbc=: 'libiodbc.dylib'
 case. 'Win' do. libodbc=: 'odbc32.dll'
 case. do. libodbc=: 'libodbc.so'
