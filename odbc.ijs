@@ -30,7 +30,7 @@ setzlocale=: 3 : 0
 wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-wrds=. wrds ,' dddriver ddconfig ddcoltype'
+wrds=. wrds ,' dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
 wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
 wrds=. > ;: wrds
@@ -79,6 +79,7 @@ sqlfreehandle=: (libodbc, ' SQLFreeHandle s s x') &cd
 sqlgetdata=: (libodbc, ' SQLGetData s x s s * x *x') &cd
 sqlgetdiagrec=: (libodbc, ' SQLGetDiagRec s s x s *c *i *c s *s') &cd
 sqlgetinfo=: (libodbc, ' SQLGetInfo s x s * s *s') &cd
+sqlgettypeinfo=: (libodbc, ' SQLGetTypeInfo s x s') &cd
 sqlnumresultcols=: (libodbc, ' SQLNumResultCols s x *s') &cd
 sqlprepare=: (libodbc, ' SQLPrepare s x *c i') &cd
 sqlrowcount=: (libodbc, ' SQLRowCount s x *x') &cd
@@ -309,9 +310,39 @@ end.
 
 ddtblx=: 3 : 0
 if. SQL_ERROR-:sh=. ddtbl y do. SQL_ERROR
-elseif. SQL_ERROR-:dat=. ddfch sh,_1 do. SQL_ERROR
-elseif. 0<>./ #&> dat do. trctnob@:":&.> dat
-elseif.do. dat
+elseif. SQL_ERROR-:dat=. ddfch sh,_1 do. SQL_ERROR [ freestmt sh
+elseif. 0<>./ #&> dat do. trctnob@:":&.> dat [ freestmt sh
+elseif.do. dat [ freestmt sh
+end.
+)
+ddtypeinfo=: 3 : 0
+clr 0
+if. -. isia y do. errret ISI08 return. end.
+if. -. y e. CHALL do. errret ISI03 return. end.
+if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
+if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_FORWARD_ONLY ;0 do. errret SQL_HANDLE_STMT,sh return. end.
+if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CONCURRENCY;SQL_CONCUR_READ_ONLY;0 do. errret SQL_HANDLE_STMT,sh return. end.
+z=. sqlgettypeinfo sh;SQL_ALL_TYPES
+if. sqlok z do.
+  CSPALL=: CSPALL,y,sh
+  sh
+else.
+  r=. errret SQL_HANDLE_STMT,sh
+  r [ freestmt sh return.
+end.
+)
+ddtypeinfox=: 3 : 0
+clr 0
+if. SQL_ERROR&-: sh=. err=. ddtypeinfo y do.
+  err
+elseif. SQL_ERROR&-: cnm=. err=. ddcnm sh do.
+  err [ freestmt sh
+elseif. do.
+  if. SQL_ERROR&-: dat=. err=. ddfet sh, _1 do.
+    err [ freestmt sh
+  else.
+    (,:cnm),dat [ freestmt sh
+  end.
 end.
 )
 ddcheck=: 3 : 0
@@ -2239,7 +2270,7 @@ else.
   wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
   wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
   wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype'
+  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
   ". (wrds ,"1 '_z_ =: ',"1 wrds ,"1 cl) -."1 ' '
   r
 end.
@@ -2249,7 +2280,7 @@ cl=. '_jdd_'
   wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
   wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
   wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype'
+  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
 )
