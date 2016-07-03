@@ -399,7 +399,7 @@ sqlfreehandle SQL_HANDLE_ENV;y
 
 gc=: 0 4 6&{
 tdatchar=: 3 : 0"1
-sqlgetdata (b0 y),SQL_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
+sqlgetdata (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
 )
 
 trimdat=: 13 : '(<(>2{y){.>1{y) 1} y'
@@ -414,7 +414,7 @@ z=. (<8&u: 6&u: 1:{z) 1} z
 if. sqlok z do. trimdat z else. z end.
 )
 datdouble=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_DOUBLE;(,1.5-1.5);8;,0
+z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -424,7 +424,7 @@ else.
 end.
 )
 datinteger32=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_INTEGER;(,2-2);4;,0
+z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(,2-2);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -434,7 +434,7 @@ else.
 end.
 )
 datinteger64=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_INTEGER;(4${.a.);4;,0
+z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(4${.a.);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -448,7 +448,7 @@ end.
 
 datinteger=: ('datinteger',SFX)~ f.
 datbigint32=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_DOUBLE;(,1.5-1.5);8;,0
+z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -470,7 +470,7 @@ end.
 
 datbigint=: ('datbigint',(IF64*.UseBigInt){::'32';SFX)~ f.
 datsmallint=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_SMALLINT;(2${.a.);2;,0
+z=. gc sqlgetdata (b0 y),SQL_C_SSHORT;(2${.a.);2;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
