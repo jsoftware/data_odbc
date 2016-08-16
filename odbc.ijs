@@ -1576,7 +1576,7 @@ if. tp ~:&# x do. errret ISI08 return. end.
 sql2=. 'select ', (}. ; (<',') ,&.> (}.tp)), ' from ', table, ' where 1=0'
 if. SQL_ERROR-: z=. y ddcoltype~ sql2 do. z return. end.
 'oty ty lns'=. |: _3]\;8 13 9{("1) z
-a=. (2 131072 e.~ 3!:0)&> x1=. }.x
+a=. (2 131072 262144 e.~ 3!:0)&> x1=. }.x
 b=. (2>(#@$))&> x1
 if. 1 e. r=. a *. b do.
   x=. (,:@:,&.> (1+I.r){x) (1+I.r)}x
@@ -2188,14 +2188,14 @@ src=: _1: ic 1: ic ]
 sqlbad=: 13 : '(src >{. y) e. DD_ERROR'
 sqlok=: 13 : '(src >{. y) e. DD_SUCCESS'
 sqlsuccess=: 13 : '(src >{. y) e. SQL_SUCCESS'
-iscl=: e.&(2 131072)@(3!:0) *. 1: >: [: # $
+iscl=: e.&(2 131072 262144)@(3!:0) *. 1: >: [: # $
 isua=: 0: = [: # $
 isiu=: 3!:0 e. 1 4"_
 isia=: isua *. isiu
 
 isnu=: 3!:0 e. 1 4 8"_
 isna=: isua *. isnu
-iscu=: (e.&2 131072)@(3!:0)
+iscu=: (e.&2 131072 262144)@(3!:0)
 ifs=: [: ,. [: _1&ic ,
 ifi=: [: ,. [: _2&ic ,
 ffs=: [: ,. [: _1&fc ,
