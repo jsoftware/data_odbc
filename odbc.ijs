@@ -1083,7 +1083,7 @@ end.
 
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
-if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' do.
+if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' do.
   bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS
 end.
 
