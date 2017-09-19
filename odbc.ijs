@@ -52,7 +52,7 @@ if. 0~: 4!:0<'PREFER_IODBC' do.
   PREFER_IODBC=. 0
 end.
 select. UNAME
-case. 'Linux' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.so.2';'libodbc.so.1'
+case. 'Linux' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.so.2';'libodbc.so.2'
 case. 'Darwin' do. libodbc=: 'libiodbc.dylib'
 case. 'Win' do. libodbc=: 'odbc32.dll'
 case. do. libodbc=: 'libodbc.so'
@@ -1083,7 +1083,7 @@ end.
 
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
-if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' do.
+if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb'  ; 'libtdsodbc.so' do.
   bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS
 end.
 
@@ -2024,9 +2024,11 @@ SQL_SS_TIME2=: _154
 
 SQL_ADD=: 4
 SQL_ATTR_CURSOR_TYPE=: 6
+SQL_CURSOR_FORWARD_ONLY=: 0
 SQL_CURSOR_DYNAMIC=: 2
 SQL_ATTR_CONCURRENCY=: 7
 SQL_CONCUR_LOCK=: 2
+SQL_CONCUR_READ_ONLY=: 1
 SQL_PARAM_INPUT=: 1
 SQL_ALL_TYPES=: 0
 COLUMNBUF=: 1000
