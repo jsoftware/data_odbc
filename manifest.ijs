@@ -6,15 +6,13 @@ DESCRIPTION=: 0 : 0
 Accessing database using odbc api
 )
 
-VERSION=: '1.0.23'
+VERSION=: '1.0.24'
 
-RELEASE=: 'j802 j803 j804 j805 j806'
+RELEASE=: 'j805 j806'
 
 PLATFORMS=: 'win linux darwin'
 
 FILES=: 0 : 0
-history.txt
-manifest.ijs
 odbc.ijs
 test/test0.ijs
 test/test1.ijs

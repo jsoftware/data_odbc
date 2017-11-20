@@ -376,7 +376,7 @@ else.
 end.
 r=. 0 3$''
 while.do.
-  z=. sqlgetdiagrec t;y;(1+0{$r);(5#' ');(,0);(256#' ');256;,0
+  z=. sqlgetdiagrec t;y;(1+0{$r);(5#' ');(,0);(1024#' ');1024;,0
   if. sqlbad z do. SQL_ERROR return. end.
   if. SQL_NO_DATA=src >0{z do. break. end.
   r=. r,(2{.4}.z),<(>8{z){.>6{z
@@ -1083,7 +1083,7 @@ end.
 
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
-if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb'  ; 'libtdsodbc.so' do.
+if. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' ; 'libtdsodbc.so' do.
   bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS
 end.
 
@@ -2280,10 +2280,10 @@ end.
 )
 setzlocale=: 3 : 0
 cl=. '_jdd_'
-  wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
-  wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
-  wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-  wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
+wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
+wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
+wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
+wrds=. >;: wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
 )
