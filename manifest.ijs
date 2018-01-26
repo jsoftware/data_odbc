@@ -6,9 +6,9 @@ DESCRIPTION=: 0 : 0
 Accessing database using odbc api
 )
 
-VERSION=: '1.0.24'
+VERSION=: '1.0.25'
 
-RELEASE=: 'j805 j806'
+RELEASE=: 'j805 j806 j807'
 
 PLATFORMS=: 'win linux darwin'
 
