@@ -346,7 +346,7 @@ elseif. do.
 end.
 )
 ddcheck=: 3 : 0
-if. _1=y do. sminfo 'Data Driver';dderr $0 else. y end.
+if. _1=y do. (sminfo]]) dderr $0 else. y end.
 )
 ddcol=: 4 : 0
 clr 0
@@ -866,16 +866,16 @@ ALLDM=: i. 0 3
 BADTYPES=: i. 0 0
 DDROWCNT=: 0
 
-if. 2 0-.@-:(libodbc ,' dummy > n')&cd ::cder'' do. DD_OK return. end.
+if. 2 0-.@-:(libodbc ,' dummy > n')&cd ::cder'' do. (sminfo]]) dderr errret ISI11 return. end.
 z=. sqlallochandle SQL_HANDLE_ENV;0;,0
 EH=: fat >3{z
 if. sqlbad z do.
 
-  sminfo dderr errret ISI11
+  (sminfo]]) dderr errret ISI11
   return.
 end.
 if. sqlbad sqlsetenvattr EH;SQL_ATTR_ODBC_VERSION;SQL_OV_ODBC3;0 do.
-  sminfo dderr errret ISI12
+  (sminfo]]) dderr errret ISI12
   return.
 end.
 6!:3[0
