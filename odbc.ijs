@@ -76,6 +76,7 @@ sqlexecute=: (libodbc, ' SQLExecute s x') &cd
 sqlfetch=: (libodbc, ' SQLFetch s x') &cd
 sqlfetchscroll=: (libodbc, ' SQLFetchScroll s x s x') &cd
 sqlfreehandle=: (libodbc, ' SQLFreeHandle s s x') &cd
+sqlgetfunctions=: (libodbc, ' SQLGetFunctions s x s *s') &cd
 sqlgetdata=: (libodbc, ' SQLGetData s x s s * x *x') &cd
 sqlgetdiagrec=: (libodbc, ' SQLGetDiagRec s s x s *c *i *c s *s') &cd
 sqlgetinfo=: (libodbc, ' SQLGetInfo s x s * s *s') &cd
@@ -1083,10 +1084,13 @@ end.
 
 if. ((<tolower drvname) e. <'aceodbc.dll') do. bugflag=. bugflag (23 b.) IF64 *. BUGFLAG_BINDPARMBIGINT end.
 
-if. ((12{.drvname) -.@-: 'libmsodbcsql') *. (<tolower drvname) -.@e. 'sqlsrv32.dll' ; 'sqlncli.dll' ; 'sqlncli10.dll' ; 'sqlncli11.dll' ; 'msodbcsql11.dll' ; 'msodbcsql13.dll' ; 'odbcjt32.dll' ; 'aceodbc.dll' ; 'odbcfb' ; 'libtdsodbc.so' do.
-  bugflag=. bugflag (23 b.) BUGFLAG_BULKOPERATIONS
+if. SQL_SUCCESS= >@{. cdrc=. sqlgetfunctions ch ; SQL_API_SQLBULKOPERATIONS ; ,_1 do.
+  if. SQL_TRUE~: {. 3{:: cdrc do.
+    bugflag=. bugflag bitor BUGFLAG_BULKOPERATIONS
+  end.
+else.
+  bugflag=. bugflag bitor BUGFLAG_BULKOPERATIONS
 end.
-
 DBMSALL=: DBMSALL, y; r=. 'ODBC';dsn;uid;server;name;ver;drvname;drvver;charset;chardiv;bugflag
 r
 )
@@ -1988,6 +1992,8 @@ SQL_AUTOCOMMIT_OFF=: 0
 SQL_AUTOCOMMIT_ON=: 1
 SQL_ROWSET_SIZE=: 9
 SQL_IS_UINTEGER=: _5
+SQL_TRUE=: 1
+SQL_API_SQLBULKOPERATIONS=: 24
 
 SQL_DESC_BASE_COLUMN_NAME=: 22
 SQL_DESC_BASE_TABLE_NAME=: 23
