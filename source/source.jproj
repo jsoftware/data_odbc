@@ -1,0 +1,18 @@
+NB. project: ~Addons/data/odbc/source/source
+NB.
+NB. defines list of source files.
+NB. path defaults to project directory.
+
+init.ijs
+api.ijs
+ddfns.ijs
+ddins.ijs
+defs.ijs
+fix.ijs
+noun.ijs
+param.ijs
+types.ijs
+util.ijs
+accessor.ijs
+zface.ijs
+ddpost.ijs

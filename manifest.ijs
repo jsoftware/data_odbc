@@ -8,7 +8,9 @@ Accessing database using odbc api
 
 VERSION=: '1.0.30'
 
-RELEASE=: 'j805 j806 j807'
+RELEASE=: 'j805'
+
+FOLDER=: 'data/odbc'
 
 PLATFORMS=: 'win linux darwin'
 
