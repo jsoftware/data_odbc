@@ -1,6 +1,6 @@
 NB. build
 
-writesourcex_jp_ '~Addons/data/odbc/source/source';'~Addons/data/odbc/odbc.ijs'
+writesourcex_jp_ '~Addons/data/odbc/source';'~Addons/data/odbc/odbc.ijs'
 
 (jpath '~addons/data/odbc/odbc.ijs') (fcopynew ::0:) jpath '~Addons/data/odbc/odbc.ijs'
 
