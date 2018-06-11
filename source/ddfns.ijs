@@ -242,6 +242,7 @@ for_i. i.#key do.
   case. 'dayno' do. UseDayNo=: -. 0-: {.i{::value
 NB.   case. 'errret' do. UseErrRet=: -. 0-: {.i{::value
   case. 'numeric' do. UseNumeric=: -. 0-: {.i{::value
+  case. 'integernull' do. IntegerNull=: <. {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
 NB.   case. 'unicode' do. UseUnicode=: -. 0-: {.i{::value
@@ -589,7 +590,7 @@ datinteger32=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(,2-2);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -601,7 +602,7 @@ datinteger64=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(4${.a.);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<fat _2&ic >1{z) 1} z
   end.
@@ -617,7 +618,7 @@ datbigint32=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -629,7 +630,7 @@ datbigint64=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SBIGINT;(,2-2);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -643,7 +644,7 @@ datsmallint=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SSHORT;(2${.a.);2;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<fat _1&ic >1{z) 1} z
   end.
@@ -657,7 +658,7 @@ datbit=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(1${.a.);1;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<a.&i. fat >1{z) 1} z
   end.

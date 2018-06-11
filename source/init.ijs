@@ -7,6 +7,7 @@ coclass 'jdd'
 
 DateTimeNull=: _
 InitDone=: 0
+IntegerNull=: __ [ <.-2^<:32*1+IF64  NB. for backward compatible
 NumericNull=: __
 UseBigInt=: 0
 UseDayNo=: 0
@@ -43,7 +44,7 @@ wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
 wrds=. wrds ,' dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
 wrds=. > ;: wrds
 
 cl=. '_jdd_'

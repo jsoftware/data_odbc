@@ -2,6 +2,7 @@ coclass 'jdd'
 
 DateTimeNull=: _
 InitDone=: 0
+IntegerNull=: __ [ <.-2^<:32*1+IF64
 NumericNull=: __
 UseBigInt=: 0
 UseDayNo=: 0
@@ -32,7 +33,7 @@ wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
 wrds=. wrds ,' dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
 wrds=. > ;: wrds
 
 cl=. '_jdd_'
@@ -248,6 +249,7 @@ for_i. i.#key do.
   case. 'datetimenull' do. DateTimeNull=: <. {.i{::value
   case. 'dayno' do. UseDayNo=: -. 0-: {.i{::value
   case. 'numeric' do. UseNumeric=: -. 0-: {.i{::value
+  case. 'integernull' do. IntegerNull=: <. {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
   case. do. _1 return.
@@ -428,7 +430,7 @@ datinteger32=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(,2-2);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -438,7 +440,7 @@ datinteger64=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(4${.a.);4;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<fat _2&ic >1{z) 1} z
   end.
@@ -452,7 +454,7 @@ datbigint32=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -462,7 +464,7 @@ datbigint64=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SBIGINT;(,2-2);8;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   end.
 else.
   z
@@ -474,7 +476,7 @@ datsmallint=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_SSHORT;(2${.a.);2;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<fat _1&ic >1{z) 1} z
   end.
@@ -486,7 +488,7 @@ datbit=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(1${.a.);1;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<NumericNull) 1} z
+    (<IntegerNull) 1} z
   else.
     (<a.&i. fat >1{z) 1} z
   end.
@@ -1249,7 +1251,7 @@ if. #ty do.
           if. IF64 do.
             if. UseBigInt do.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. _ __, NumericNull do.
+              if. #b=. I. a e. IntegerNull, NumericNull do.
                 (bname)=: (2-2)&+ <. (2-2) b}a
                 (blname)=: _1 b}nrows$SZI
               else.
@@ -1260,7 +1262,7 @@ if. #ty do.
               q=. sh;(>:i);SQL_C_SBIGINT;(vad bname);SZI;(<vad blname)
             else.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. _ __, NumericNull do.
+              if. #b=. I. a e. IntegerNull, NumericNull do.
                 (bname)=: (_&<.) <. (1.1-1.1) b}a
                 (blname)=: _1 b}nrows$8
               else.
@@ -1271,7 +1273,7 @@ if. #ty do.
             end.
           else.
             a=. , brow&{ >(of+i){x
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e.IntegerNull, NumericNull do.
               (bname)=: (_&<.) <. (1.1-1.1) b}a
               (blname)=: _1 b}nrows$8
             else.
@@ -1294,7 +1296,7 @@ if. #ty do.
         end.
         if. IF64 do.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: 2 ic , (2-2)&+ <. (2-2) b}a
             (blname)=: _1 b}nrows$4
           else.
@@ -1304,7 +1306,7 @@ if. #ty do.
           q=. sh;(>:i);SQL_C_SLONG;(vad bname);4;(<vad blname)
         else.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: (2-2)&+ <. (2-2) b}a
             (blname)=: _1 b}nrows$SZI
           else.
@@ -1320,7 +1322,7 @@ if. #ty do.
           r return.
         end.
         a=. , brow&{ >(of+i){x
-        if. #b=. I. a e. _ __, NumericNull do.
+        if. #b=. I. a e. NumericNull do.
           (bname)=: (_&<.) (1.1-1.1) b}a
           (blname)=: _1 b}nrows$8
         else.
@@ -1657,7 +1659,7 @@ for_i. i.ncol do.
       if. IF64 do.
         if. UseBigInt do.
           if. (IF64*.(SQL_BIGINT~:i{ty)+.(0~:bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)) do.
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e. IntegerNull, NumericNull do.
               (bname)=: 2&ic (2-2) + <. (2-2) b}a
               (blname)=: _1 b}nrows$bl=. 4
             else.
@@ -1665,7 +1667,7 @@ for_i. i.ncol do.
               (blname)=: nrows$bl=. 4
             end.
           else.
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e. IntegerNull, NumericNull do.
               (bname)=: (2-2) + <. (2-2) b}a
               (blname)=: _1 b}nrows$bl=. SZI
             else.
@@ -1676,7 +1678,7 @@ for_i. i.ncol do.
           bytelen=. bytelen, bl
           q=. sh;(>:i);SQL_PARAM_INPUT;((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_C_SLONG, SQL_C_SBIGINT);((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_INTEGER, SQL_BIGINT);0;0;(vad bname);bl;(<vad blname)
         else.
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: (_&<.) <. (1.1-1.1) b}a
             (blname)=: _1 b}nrows$bl=. 8
           else.
@@ -1687,7 +1689,7 @@ for_i. i.ncol do.
           q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_DOUBLE;SQL_BIGINT;0;0;(vad bname);0;(<vad blname)
         end.
       else.
-        if. #b=. I. a e. _ __, NumericNull do.
+        if. #b=. I. a e. IntegerNull, NumericNull do.
           (bname)=: (2-2) + <. (2-2) b}a
           (blname)=: _1 b}nrows$bl=. SZI
         else.
@@ -1720,7 +1722,7 @@ for_i. i.ncol do.
       r return.
     end.
     if. IF64 do.
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. IntegerNull, NumericNull do.
         (bname)=: 2&ic (2-2) + <. (2-2) b}a
         (blname)=: _1 b}nrows$bl=. 4
       else.
@@ -1730,7 +1732,7 @@ for_i. i.ncol do.
       bytelen=. bytelen, bl
       q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_SLONG;SQL_INTEGER;0;0;(vad bname);0;(<vad blname)
     else.
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. IntegerNull, NumericNull do.
         (bname)=: (2-2) + <. (2-2) b}a
         (blname)=: _1 b}nrows$bl=. SZI
       else.
@@ -1743,7 +1745,7 @@ for_i. i.ncol do.
   case. SQL_DOUBLE;SQL_FLOAT;SQL_REAL;SQL_DECIMAL;SQL_NUMERIC do.
     try.
       a=. , >(of+i){x
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. NumericNull do.
         (bname)=: (_&<.) (1.1-1.1) b}a
         (blname)=: _1 b}nrows$bl=. 8
       else.
@@ -2266,6 +2268,7 @@ else.
 end.
 )
 getDateTimeNull=: 3 : 'DateTimeNull'
+getIntegerNull=: 3 : 'IntegerNull'
 getNumericNull=: 3 : 'NumericNull'
 getUseErrRet=: 3 : 'UseErrRet'
 getUseDayNo=: 3 : 'UseDayNo'

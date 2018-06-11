@@ -90,7 +90,7 @@ if. #ty do.
           if. IF64 do.
             if. UseBigInt do.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. _ __, NumericNull do.
+              if. #b=. I. a e. IntegerNull, NumericNull do.
                 (bname)=: (2-2)&+ <. (2-2) b}a
                 (blname)=: _1 b}nrows$SZI
               else.
@@ -101,7 +101,7 @@ if. #ty do.
               q=. sh;(>:i);SQL_C_SBIGINT;(vad bname);SZI;(<vad blname)
             else.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. _ __, NumericNull do.
+              if. #b=. I. a e. IntegerNull, NumericNull do.
                 (bname)=: (_&<.) <. (1.1-1.1) b}a
                 (blname)=: _1 b}nrows$8
               else.
@@ -112,7 +112,7 @@ if. #ty do.
             end.
           else.
             a=. , brow&{ >(of+i){x
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e.IntegerNull, NumericNull do.
               (bname)=: (_&<.) <. (1.1-1.1) b}a
               (blname)=: _1 b}nrows$8
             else.
@@ -135,7 +135,7 @@ if. #ty do.
         end.
         if. IF64 do.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: 2 ic , (2-2)&+ <. (2-2) b}a
             (blname)=: _1 b}nrows$4
           else.
@@ -145,7 +145,7 @@ if. #ty do.
           q=. sh;(>:i);SQL_C_SLONG;(vad bname);4;(<vad blname)
         else.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: (2-2)&+ <. (2-2) b}a
             (blname)=: _1 b}nrows$SZI
           else.
@@ -161,7 +161,7 @@ if. #ty do.
           r return.
         end.
         a=. , brow&{ >(of+i){x
-        if. #b=. I. a e. _ __, NumericNull do.
+        if. #b=. I. a e. NumericNull do.
           (bname)=: (_&<.) (1.1-1.1) b}a
           (blname)=: _1 b}nrows$8
         else.
@@ -550,7 +550,7 @@ for_i. i.ncol do.
       if. IF64 do.
         if. UseBigInt do.
           if. (IF64*.(SQL_BIGINT~:i{ty)+.(0~:bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)) do.
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e. IntegerNull, NumericNull do.
               (bname)=: 2&ic (2-2) + <. (2-2) b}a  NB. ensure double also map to long
               (blname)=: _1 b}nrows$bl=. 4
             else.
@@ -558,7 +558,7 @@ for_i. i.ncol do.
               (blname)=: nrows$bl=. 4
             end.
           else.
-            if. #b=. I. a e. _ __, NumericNull do.
+            if. #b=. I. a e. IntegerNull, NumericNull do.
               (bname)=: (2-2) + <. (2-2) b}a  NB. ensure double also map to long
               (blname)=: _1 b}nrows$bl=. SZI
             else.
@@ -569,7 +569,7 @@ for_i. i.ncol do.
           bytelen=. bytelen, bl
           q=. sh;(>:i);SQL_PARAM_INPUT;((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_C_SLONG, SQL_C_SBIGINT);((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_INTEGER, SQL_BIGINT);0;0;(vad bname);bl;(<vad blname)
         else.
-          if. #b=. I. a e. _ __, NumericNull do.
+          if. #b=. I. a e. IntegerNull, NumericNull do.
             (bname)=: (_&<.) <. (1.1-1.1) b}a
             (blname)=: _1 b}nrows$bl=. 8
           else.
@@ -580,7 +580,7 @@ for_i. i.ncol do.
           q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_DOUBLE;SQL_BIGINT;0;0;(vad bname);0;(<vad blname)
         end.
       else.
-        if. #b=. I. a e. _ __, NumericNull do.
+        if. #b=. I. a e. IntegerNull, NumericNull do.
           (bname)=: (2-2) + <. (2-2) b}a
           (blname)=: _1 b}nrows$bl=. SZI
         else.
@@ -613,7 +613,7 @@ for_i. i.ncol do.
       r return.
     end.
     if. IF64 do.
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. IntegerNull, NumericNull do.
         (bname)=: 2&ic (2-2) + <. (2-2) b}a  NB. ensure double also map to long
         (blname)=: _1 b}nrows$bl=. 4
       else.
@@ -623,7 +623,7 @@ for_i. i.ncol do.
       bytelen=. bytelen, bl
       q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_SLONG;SQL_INTEGER;0;0;(vad bname);0;(<vad blname)
     else.
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. IntegerNull, NumericNull do.
         (bname)=: (2-2) + <. (2-2) b}a
         (blname)=: _1 b}nrows$bl=. SZI
       else.
@@ -636,7 +636,7 @@ for_i. i.ncol do.
   case. SQL_DOUBLE;SQL_FLOAT;SQL_REAL;SQL_DECIMAL;SQL_NUMERIC do.
     try.
       a=. , >(of+i){x
-      if. #b=. I. a e. _ __, NumericNull do.
+      if. #b=. I. a e. NumericNull do.
         (bname)=: (_&<.) (1.1-1.1) b}a  NB. promoting to double
         (blname)=: _1 b}nrows$bl=. 8
       else.
