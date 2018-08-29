@@ -8,6 +8,8 @@ NB. handy ddl argument utils
 b0=: <"0
 bs=: ];#
 
+bitor=: 23 b.
+
 NB. bits to index #'s
 
 NB. first atom - the dll interface likes pure atoms

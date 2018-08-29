@@ -2193,6 +2193,8 @@ end.
 )
 b0=: <"0
 bs=: ];#
+
+bitor=: 23 b.
 fat=: ''&$@:,
 src=: _1: ic 1: ic ]
 sqlbad=: 13 : '(src >{. y) e. DD_ERROR'
