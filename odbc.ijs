@@ -588,7 +588,7 @@ else.
   z
 end.
 )
-datlong=: 3 : 0"1
+datlong=: 0&$: : (4 : 0)"1
 sc=. b0 y
 get=. sc,SQL_C_BINARY;(LONGBUF$' ');LONGBUF;,0
 
@@ -601,6 +601,7 @@ while. lim>:#dat do.
   dat=. dat , (LONGBUF<.>{:z) {. , >4{z
   z=. sqlgetdata get
 end.
+if. x do. dat=. 8&u: 4&u: _1&(3!:4) dat end.
 DD_OK ; dat ; #dat
 )
 getchar=: datchar&.>
@@ -627,6 +628,7 @@ gettype_timestamp=: dattimestamp&.>
 gettype_date=: datdate&.>
 gettype_time=: dattime&.>
 getss_time2=: datsstime2&.>
+getss_xml=: 1&datlong&.>
 getuniqueid=: datchar&.>
 
 iad=: 15!:14@boxopen
@@ -2128,6 +2130,7 @@ SQL_TYPE_DATE=:91['*'
 SQL_TYPE_TIME=:92['*'
 SQL_TYPE_TIMESTAMP=:93['*'
 SQL_SS_TIME2=: _154['*'
+SQL_SS_XML=: _152
 SQL_VARCHAR=: 12['*'
 SQL_DEFAULT=: 99['*'
 SQL_LONGVARCHAR=: _1

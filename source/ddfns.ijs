@@ -770,7 +770,7 @@ end.
 )
 
 NB. =========================================================
-datlong=: 3 : 0"1
+datlong=: 0&$: : (4 : 0)"1
 
 NB.*datlong v--  fetches  long types.  Unfortunately  looping  is
 NB. unavoidable.  Setting the  (LONGBUF) to the largest value the
@@ -803,6 +803,7 @@ NB. last item of z contains bytes remaining before last get
   dat=. dat , (LONGBUF<.>{:z) {. , >4{z
   z=. sqlgetdata get
 end.
+if. x do. dat=. 8&u: 4&u: _1&(3!:4) dat end.
 DD_OK ; dat ; #dat  NB. return code, data, length
 )
 
@@ -836,6 +837,7 @@ gettype_timestamp=: dattimestamp&.>
 gettype_date=: datdate&.>
 gettype_time=: dattime&.>
 getss_time2=: datsstime2&.>
+getss_xml=: 1&datlong&.>
 getuniqueid=: datchar&.>
 
 

@@ -49,6 +49,7 @@ SQL_TYPE_DATE=:91['*'      NB. SQL_C_TYPE_DATE      SQL_C_CHAR    16    fmtddts
 SQL_TYPE_TIME=:92['*'      NB. SQL_C_TYPE_TIME      SQL_C_CHAR    6     fmttdts
 SQL_TYPE_TIMESTAMP=:93['*' NB. SQL_C_TYPE_TIMESTAMP SQL_C_CHAR    6     fmtdts
 SQL_SS_TIME2=: _154['*'    NB. SQL_C_BINARY         SQL_C_CHAR    12    fmttdts
+SQL_SS_XML=: _152          NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_VARCHAR=: 12['*'       NB. SQL_C_CHAR           SQL_C_CHAR    1     trctnb trbuclnb
 SQL_DEFAULT=: 99['*'       NB. SQL_C_DEFAULT        SQL_C_CHAR    1     ]
 SQL_LONGVARCHAR=: _1       NB. SQL_C_CHAR           SQL_C_CHAR    1     trbuclnb
