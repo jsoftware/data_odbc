@@ -6,7 +6,7 @@ DESCRIPTION=: 0 : 0
 Accessing database using odbc api
 )
 
-VERSION=: '1.0.33'
+VERSION=: '1.0.34'
 
 RELEASE=: ''
 
