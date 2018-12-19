@@ -405,7 +405,7 @@ tdatchar=: 3 : 0"1
 sqlgetdata (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
 )
 
-trimdat=: 13 : '(<(>2{y){.>1{y) 1} y'
+trimdat=: 13 : '(<(0>.>2{y){.>1{y) 1} y'
 datchar=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
 if. sqlok z do. trimdat z else. z end.
@@ -488,7 +488,7 @@ datbit=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(1${.a.);1;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
-    (<IntegerNull) 1} z
+    (<0) 1} z
   else.
     (<a.&i. fat >1{z) 1} z
   end.
@@ -778,7 +778,7 @@ cv=. GCNM {~ GDX i. ; 6 {"1 ci
 ty=. >6 {"1 ci
 
 one=. 0<r
-dat=. (#ci)#<i.0 0
+dat=. (#ci)#<0 0$0
 if. r=0 do. dat return. end.
 fetch=. sh;SQL_FETCH_NEXT;0
 while.do.
@@ -793,14 +793,19 @@ while.do.
 
 
     if. _1 e. len=. dddataln sh,i+1 do.
-      ndx=. I. len = _1
-      if. 2 = 3!:0 n do.
-        n=. ' ' ndx } n
-      else.
-        if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2 do.
-          n=. DateTimeNull ndx } n
+      if. # ndx=. I. len = _1 do.
+        if. 2 = 3!:0 n do.
+          n=. (' '#~{:$n) ndx } n
         else.
-          n=. NumericNull ndx } n
+          if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2 do.
+            n=. DateTimeNull ndx } n
+          elseif. (i{ty) e. SQL_BIT do.
+            n=. 0 ndx } n
+          elseif. 8 = 3!:0 n do.
+            n=. NumericNull ndx } n
+          elseif. 4 = 3!:0 n do.
+            n=. IntegerNull ndx } n
+          end.
         end.
       end.
     end.
