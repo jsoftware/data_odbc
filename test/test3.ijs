@@ -86,25 +86,25 @@ insert into tdata (NAME, SEX, DEPT, DOB, DOH, SALARY) values ('Holliss D', 'F', 
 
 NB. =========================================================
 testdb=: 3 : 0
-if. -.IFWIN do. smoutput '>> msaccess only works under windows' return. end.
+if. -.IFWIN do. echo '>> msaccess only works under windows' return. end.
 setzlocale_jdd_ 0
 
 ddconfig 'errret';0;'dayno';0;'unicode';0
 
-smoutput '>> dddriver'
-smoutput dddriver ''
+echo '>> dddriver'
+echo dddriver ''
 
-smoutput '>> dddrv'
-smoutput dddrv ''
+echo '>> dddrv'
+echo dddrv ''
 
-smoutput '>> ddsrc'
-smoutput ddsrc ''
+echo '>> ddsrc'
+echo ddsrc ''
 
-smoutput '>> delete old database'
+echo '>> delete old database'
 f=. jpath '~temp/jdata.mdb'
 1!:55 ::0: <f
 
-smoutput '>> create empty database'
+echo '>> create empty database'
 
 ODBC_ADD_DSN=. 1   NB. Add data source
 sqlconfigdatasource=: 'odbccp32 SQLConfigDataSourceW i i i *w *w'&cd
@@ -113,106 +113,106 @@ drv=. IF64{::'Microsoft Access Driver (*.mdb)';'Microsoft Access Driver (*.mdb, 
 attrib=. 'CREATE_DBV4=' , (dquote f), ' General', {.a.
 sqlconfigdatasource 0 ; ODBC_ADD_DSN ; (uucp drv) ; (uucp attrib)
 
-smoutput '>> open database'
+echo '>> open database'
 
 drv=. IF64{::'Driver={Microsoft Access Driver (*.mdb)}';'Driver={Microsoft Access Driver (*.mdb, *.accdb)}'
 if. _1~: ch=. ddcon drv,';Dbq=',f do.
-  smoutput '>> create metadata and fill sample data'
+  echo '>> create metadata and fill sample data'
   if. _1= ch ddsql~ integerdate{::tdata_ddl;tdata_ddl2 do.
-    smoutput dderr''
+    echo dderr''
     return.
   end.
   ddtrn ch
   ddsql&ch &.> <;._2 (integerdate{::tdata_data;tdata_data2) -. LF
   ddcom ch
 
-  smoutput '>> dddbm'
-  smoutput dddbms ch
-  smoutput '>> ddtblx'
-  smoutput ddtblx ch
+  echo '>> dddbm'
+  echo dddbms ch
+  echo '>> ddtblx'
+  echo ddtblx ch
 
-  smoutput '>> ddtbl'
+  echo '>> ddtbl'
   if. _1~: sh=. ddtbl ch do.
-    smoutput '>> ddcnm'
-    smoutput ddcnm sh
-    smoutput '>> ddfet'
-    smoutput ddfet sh,_1
+    echo '>> ddcnm'
+    echo ddcnm sh
+    echo '>> ddfet'
+    echo ddfet sh,_1
   end.
-  smoutput '>> ddcol'
-  smoutput 'tdata' ddcol ch
-  smoutput '>> ddsel 5 rows'
+  echo '>> ddcol'
+  echo 'tdata' ddcol ch
+  echo '>> ddsel 5 rows'
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput '>> ddcolinfo'
-    smoutput ddcolinfo sh
-    smoutput '>> ddcnm'
+    echo '>> ddcolinfo'
+    echo ddcolinfo sh
+    echo '>> ddcnm'
     ddcnm sh
-    smoutput '>> ddfet'
-    smoutput ddfet sh,5
-    smoutput '>> ddend'
+    echo '>> ddfet'
+    echo ddfet sh,5
+    echo '>> ddend'
     ddend sh
   end.
-  smoutput '>> ddfch'
+  echo '>> ddfch'
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput ddfch sh,_1
+    echo ddfch sh,_1
     ddend sh
   end.
-  smoutput '>> ddfch raw format'
+  echo '>> ddfch raw format'
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput r=. _2&ddfch sh,_1
+    echo r=. _2&ddfch sh,_1
     ddend sh
   end.
-  smoutput '>> ddttrn'
-  smoutput ddttrn ch
-  smoutput '>> ddtrn'
+  echo '>> ddttrn'
+  echo ddttrn ch
+  echo '>> ddtrn'
   ddtrn ch
-  smoutput '>> ddttrn'
-  smoutput ddttrn ch
-  smoutput '>> update inside transaction'
+  echo '>> ddttrn'
+  echo ddttrn ch
+  echo '>> update inside transaction'
   if. _1= ch ddsql~ 'update tdata set SALARY=SALARY + 100' do.
-    smoutput dderr''
+    echo dderr''
   else.
-    smoutput '>> ddcnt'
-    smoutput ddcnt ch
+    echo '>> ddcnt'
+    echo ddcnt ch
   end.
-  smoutput '>> value changed in transaction'
+  echo '>> value changed in transaction'
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput ddfet sh,3
+    echo ddfet sh,3
     ddend sh
   else.
-    smoutput dderr''
+    echo dderr''
   end.
-  smoutput '>> abort transaction'
+  echo '>> abort transaction'
   ddrbk ch
-  smoutput '>> ddttrn'
-  smoutput ddttrn ch
+  echo '>> ddttrn'
+  echo ddttrn ch
 
-  smoutput '>> value restored'
+  echo '>> value restored'
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput ddfet sh,3
+    echo ddfet sh,3
     ddend sh
   else.
-    smoutput dderr''
+    echo dderr''
   end.
 
-  smoutput '>> ddtrn'
+  echo '>> ddtrn'
   ddtrn ch
-  smoutput '>> ddttrn'
-  smoutput ddttrn ch
-  smoutput '>> update inside transaction'
+  echo '>> ddttrn'
+  echo ddttrn ch
+  echo '>> update inside transaction'
   ch ddsql~ 'update tdata set SALARY=SALARY + 1'
-  smoutput '>> commit transaction'
+  echo '>> commit transaction'
   ddcom ch
-  smoutput '>> ddttrn'
-  smoutput ddttrn ch
+  echo '>> ddttrn'
+  echo ddttrn ch
   if. _1~: sh=. ch ddsel~ 'select * from tdata' do.
-    smoutput ddfet sh,3
+    echo ddfet sh,3
     ddend sh
   end.
-  smoutput '>> dderr'
+  echo '>> dderr'
   ch ddsql~ 'update NOTABLE set status=status + 1'
-  smoutput dderr''
+  echo dderr''
 
-  smoutput '>> ddins'
+  echo '>> ddins'
   len=. 1e5
   if. integerdate do.
     data=. ((len, 5)$'A''BCDEF');((len, 1)$'MF');((len, 4)$'E101E201');((len, 1)$19910213);((len, 1)$20081203);(,. 1+i.len)
@@ -223,60 +223,60 @@ if. _1~: ch=. ddcon drv,';Dbq=',f do.
       data=. ((len,5)$'A''BCDEF');((len,1)$'MF');((len,4)$'E101E201');((len,16)$'{d ''1991-02-13''}');((len,16)$'{d ''2008-12-03''}');(,. 1+i.len)
     end.
   end.
-  smoutput '>> begin insert ', (":len), ' rows'
+  echo '>> begin insert ', (":len), ' rows'
   if. _1~: rc=. ch ddins~ 'select NAME, SEX, DEPT, DOB, DOH, SALARY from tdata';data do.
-    smoutput '>> finish insert ', (":len), ' rows'
-    smoutput '>> ddcnt'
-    smoutput ddcnt ch
+    echo '>> finish insert ', (":len), ' rows'
+    echo '>> ddcnt'
+    echo ddcnt ch
     if. _1~: sh=. ch ddsel~ 'select count(*) from tdata where DOH=', integerdate{::'{d ''2008-12-03''}';'20081203' do.
-      smoutput ddfet sh,_1
+      echo ddfet sh,_1
       ddend sh
     else.
-      smoutput dderr''
+      echo dderr''
     end.
     if. _1~: sh=. ch ddsel~ 'select * from tdata where DOH=', integerdate{::'{d ''2008-12-03''}';'20081203' do.
-      smoutput ddfet sh,5
+      echo ddfet sh,5
       ddend sh
     else.
-      smoutput dderr''
+      echo dderr''
     end.
   else.
-    smoutput dderr''
+    echo dderr''
   end.
 
-  smoutput '>> ddsparm'
+  echo '>> ddsparm'
   if. 0= rc=. ch ddsparm~ 'update tdata set PHOTO=? where NAME=?';(>'photo1';'photo2';'photo3');< (>'Abbott K';'Nobody';'Denny D') do.
-    smoutput '>> ddcnt'
-    smoutput ddcnt ch
+    echo '>> ddcnt'
+    echo ddcnt ch
     if. _1~: sh=. ch ddsel~ 'select * from tdata where photo is not null' do.
-      smoutput ddfet sh,_1
+      echo ddfet sh,_1
     else.
-      smoutput dderr''
+      echo dderr''
     end.
   else.
-    smoutput dderr''
+    echo dderr''
   end.
 
-  smoutput '>> ddsparm box'
+  echo '>> ddsparm box'
   if. 0= rc=. ch ddsparm~ 'update tdata set PHOTO=? where NAME=?';('photo4';'photo5';'photo6');< ('Blamire J';'somebody';'Gordon E') do.
-    smoutput '>> ddcnt'
-    smoutput ddcnt ch
+    echo '>> ddcnt'
+    echo ddcnt ch
     if. _1~: sh=. ch ddsel~ 'select * from tdata where photo is not null' do.
-      smoutput ddfet sh,_1
+      echo ddfet sh,_1
       ddend sh
     else.
-      smoutput dderr''
+      echo dderr''
     end.
   else.
-    smoutput dderr''
+    echo dderr''
   end.
 
-  smoutput '>> dddis'
+  echo '>> dddis'
   dddis ch
 
-  smoutput '>> finish'
+  echo '>> finish'
 else.
-  smoutput '>> cannot open ',f
+  echo '>> cannot open ',f
 end.
 EMPTY
 )

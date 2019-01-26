@@ -9,10 +9,17 @@ DateTimeNull=: _
 InitDone=: 0
 IntegerNull=: __ [ <.-2^<:32*1+IF64  NB. for backward compatible
 NumericNull=: __
+EpochNull=: IF64{:: __ ; _9223372036854775808
+FraSecond=: 0            NB. fractional second 0 to 9
+OffsetMinute=: 0         NB. timezone offset ahead of utc in minutes for ddins
+OffsetMinute_bin=: 1&ic 0 0
 UseBigInt=: 0
 UseDayNo=: 0
 UseNumeric=: 0
 UseTrimBulkText=: 1
+
+dayns=: 86400000000000   NB. nano seconds in one day
+EpochOffset=: 73048
 
 NB. immutable
 UseErrRet=: 0
@@ -44,7 +51,7 @@ wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
 wrds=. wrds ,' dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
 wrds=. > ;: wrds
 
 cl=. '_jdd_'

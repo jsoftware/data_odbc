@@ -49,6 +49,7 @@ SQL_TYPE_DATE=:91['*'      NB. SQL_C_TYPE_DATE      SQL_C_CHAR    16    fmtddts
 SQL_TYPE_TIME=:92['*'      NB. SQL_C_TYPE_TIME      SQL_C_CHAR    6     fmttdts
 SQL_TYPE_TIMESTAMP=:93['*' NB. SQL_C_TYPE_TIMESTAMP SQL_C_CHAR    6     fmtdts
 SQL_SS_TIME2=: _154['*'    NB. SQL_C_BINARY         SQL_C_CHAR    12    fmttdts
+SQL_SS_TIMESTAMPOFFSET=: _155['*'    NB. SQL_C_BINARY         SQL_C_CHAR    24    fmtdts
 SQL_SS_XML=: _152          NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_VARCHAR=: 12['*'       NB. SQL_C_CHAR           SQL_C_CHAR    1     trctnb trbuclnb
 SQL_DEFAULT=: 99['*'       NB. SQL_C_DEFAULT        SQL_C_CHAR    1     ]
@@ -88,12 +89,15 @@ NB. GCNM=: GCNM,;:'ffs       trctnb     trctnb        trctguid      ]'
 NB. (ddfch) type conversion gerund and type index - char_trctnb on unlisted types
 GDX=: SQL_VARCHAR, SQL_CHAR
 GCNM=: ;:'          trctnb       trctnb'
-if. UseDayNo do.
-  GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2
-  GCNM=: GCNM,;:'fmtdtsnum        fmtddtsnum     fmttdtsnum     fmttdtsnum'
-else.
-  GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2
-  GCNM=: GCNM,;:'fmtdts        fmtddts           fmttdts           fmttdts'
+if. 1=UseDayNo do.
+  GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2, SQL_SS_TIMESTAMPOFFSET
+  GCNM=: GCNM,;:'fmtdts_num       fmtddts_num    fmttdts_num    fmttdts2_num  fmtdtsx_num'
+elseif. 2=UseDayNo do.
+  GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2, SQL_SS_TIMESTAMPOFFSET
+  GCNM=: GCNM,;:'fmtdts_e         fmtddts_e      fmttdts_e      fmttdts2_e    fmtdtsx_e'
+elseif. 0=UseDayNo do.
+  GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2, SQL_SS_TIMESTAMPOFFSET
+  GCNM=: GCNM,;:'fmtdts           fmtddts        fmttdts        fmttdts2      fmtdtsx'
 end.
 GDX=: GDX, SQL_WCHAR, SQL_WVARCHAR, SQL_UNIQUEID
 GCNM=: GCNM,;:'trctnbw     trctnbw   trctguid'

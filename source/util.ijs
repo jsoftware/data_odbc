@@ -46,20 +46,44 @@ ifi=: [: ,. [: _2&ic ,
 NB. convert short float columns (real) to double float columns
 ffs=: [: ,. [: _1&fc ,
 
+NB.   typedef struct tagTIMESTAMP_STRUCT {
+NB.     SQLSMALLINT year;
+NB.     SQLUSMALLINT month;
+NB.     SQLUSMALLINT day;
+NB.     SQLUSMALLINT hour;
+NB.     SQLUSMALLINT minute;
+NB.     SQLUSMALLINT second;
+NB.     SQLUINTEGER fraction;
+NB.   } TIMESTAMP_STRUCT;
+NB. fraction is nanosecond
+
 NB. decode C datetime structures
+NB. obsolete
 NB. dts=: 13 : '((#y),6) $ _1&ic , 12{."1 y'
-dts=: 3 : 0
-a=. ((#y),6) $ _1&ic , 12{."1 y
-frac=. _2&ic , 12 13 14 15{("1) y
-((1e_9 * frac) + 5{"1 a) (<a:;5)}a
-)
+NB. dts=: 3 : 0
+NB. a=. ((#y),6) $ _1&ic , 12{."1 y
+NB. frac=. _2&ic , 12 13 14 15{("1) y
+NB. ((1e_9 * frac) + 5{"1 a) (<a:;5)}a
+NB. )
+
+NB. decode C datetime structures into 7 components (exact precision)
+dts=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
+
+NB. decode C datetime offset structures into 7 components (exact precision)
+NB. offset ignored, so same as dts
+dtsx=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
 
 NB. decode C datetime structures (date only)
 ddts=: 13 : '((#y),3) $ _1&ic , 6{.("1) y'
 
 NB. decode C datetime structures (time only)
-tdts=: 13 : '((#y),3) $ _1&ic , 6{.("1) y'
+NB. obsolete
+NB. tdts=: 13 : '((#y),3) $ _1&ic , 6{.("1) y'
 
+NB. decode C datetime structures (time only) into 4 components (last always 0)
+tdts=: ((3 ,~ #) $ [: _1&ic [: , 6{."1 ]) ,. 0:"1
+
+NB. padded to 12 bytes
 NB. typedef struct tagSS_TIME2_STRUCT {
 NB.    SQLUSMALLINT hour;
 NB.    SQLUSMALLINT minute;
@@ -68,11 +92,169 @@ NB.    SQLUINTEGER fraction;
 NB. } SQL_SS_TIME2_STRUCT;
 
 NB. decode C datetime structures (time2 only)
-tdts2=: 3 : 0
-a=. ((#y),3) $ _1&ic , 6{.("1) y
-frac=. _2&ic , 8 9 10 11{("1) y
-((1e_9 * frac) + 2{"1 a) (<a:;2)}a
+tdts2=: ((3 ,~ #) $ [: _1&ic [: , 6{."1 ]) ,. ([: _2&ic [: , 8 9 10 11{"1 ])
+
+NB. typedef struct tagSS_TIMESTAMPOFFSET_STRUCT {
+NB.    SQLSMALLINT year;
+NB.    SQLUSMALLINT month;
+NB.    SQLUSMALLINT day;
+NB.    SQLUSMALLINT hour;
+NB.    SQLUSMALLINT minute;
+NB.    SQLUSMALLINT second;
+NB.    SQLUINTEGER fraction;
+NB.    SQLSMALLINT timezone_hour;
+NB.    SQLSMALLINT timezone_minute;
+NB. } SQL_SS_TIMESTAMPOFFSET_STRUCT;
+
+NB. ---------------------------------------------------------
+
+NB. y array of dayno, return sql-c-timestamp struct 6 bytes, short=2 bytes int=4 bytes
+NB. short yy
+NB. short mm
+NB. short dd
+date2odbc=: 4 : 0
+NB. bug when y is a vector with leading zero  => always return single <'null'
+NB.                              non leading zero => return as 1800-01-01
+if. (0~:x) *. (0=y) *. 1=#y do. NB. singleton zero
+  if. 0&= #@$ y do.
+    <6#{.a.         NB. same length as not null for easy packing in column mode
+  else.
+    <,: 6#{.a.      NB. shape
+  end.
+else.
+  if. 0=x do.
+    < 1&ic@:,@<. 3&{.("1) (0&".)@(-.&'dts{}')"1 ('- : T Z z ') charsub y
+  elseif. 1=x do.
+    < 1&ic@:,@<. 3{."1 todate <. ,y
+  elseif. 2=x do.
+    < 1&ic@:,@<. 3{."1 todate <.@:(%&dayns) (+&(EpochOffset*dayns)) ,y
+  end.
+end.
 )
+
+NB. y array of dayno, return sql-c-timestamp struct 16 bytes, short=2 bytes int=4 bytes
+NB. short yy
+NB. short mm
+NB. short dd
+NB. short HH
+NB. short MM
+NB. short SS
+NB. int billionth fraction  (% 1e9)
+datetime2odbc=: 4 : 0
+NB. bug when y is a vector with leading zero  => always return single <'null'
+NB.                              non leading zero => return as 1800-01-01
+if. (0~:x) *. (0=y) *. 1=#y do. NB. singleton zero
+  if. 0&= #@$ y do.
+    <16#{.a.         NB. same length as not null for easy packing in column mode
+  else.
+    <,: 16#{.a.      NB. shape
+  end.
+else.
+  if. 0=x do.
+    d1=. <. d0=. 6&{.("1) (0&".)@(-.&'dts{}')"1 ('- : T Z z ') charsub y
+    d2=. 1&| {:"1 d0
+    < (1&ic@:<.@:}: , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) d1,.d2
+  elseif. 1=x do.
+    d1=. 3{."1 todate d0=. <. y=. ,y
+    d2=. 24 60 60&#:@(86400&*) y-d0
+    < (1&ic@:<. , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) d1,.d2
+  elseif. 2=x do.
+    d1=. <. 3{."1 todate <.@:(%&86400) d0=. (%&1e9) d3=. (+&(EpochOffset*dayns)) ,y
+    d2=. <. 24 60 60&#:@(86400&|) d0
+    < (1&ic@:<.@:}: , 2&ic@:<.@:{:)("1) d1,.d2,. <. 1e9|d3
+  end.
+end.
+)
+
+NB. y array of dayno, return sql-c-timestampoffset struct 20 bytes, short=2 bytes int=4 bytes
+NB. short yy
+NB. short mm
+NB. short dd
+NB. short HH
+NB. short MM
+NB. short SS
+NB. int billionth fraction  (% 1e9)
+NB. TODO: timezone offset ignore and always 0
+datetimex2odbc=: 4 : 0
+NB. bug when y is a vector with leading zero  => always return single <'null'
+NB.                              non leading zero => return as 1800-01-01
+if. (0~:x) *. (0=y) *. 1=#y do. NB. singleton zero
+  if. 0&= #@$ y do.
+    <20#{.a.         NB. same length as not null for easy packing in column mode
+  else.
+    <,: 20#{.a.      NB. shape
+  end.
+else.
+  if. 0=x do.
+    f=. +./"1 y e.("0 1) 'Zz'
+    d1=. <. d0=. 6&{.("1) (0&".)@(-.&'dts{}')"1 ('- : T Z z ') charsub y
+    d2=. 1&| {:"1 d0
+    < (f{OffsetMinute_bin,:1&ic 0 0),~"1 (1&ic@:<.@:}: , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) d1,.d2
+  elseif. 1=x do.
+    d1=. 3{."1 todate d0=. <. y=. ,y
+    d2=. 24 60 60&#:@(86400&*) y-d0
+    < OffsetMinute_bin,~"1 (1&ic@:<. , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) d1,.d2
+  elseif. 2=x do.
+    d1=. <. 3{."1 todate <.@:(%&86400) d0=. (%&1e9) d3=. (+&(EpochOffset*dayns)) ,y
+    d2=. <. 24 60 60&#:@(86400&|) d0
+    < OffsetMinute_bin,~"1 (1&ic@:<.@:}: , 2&ic@:<.@:{:)("1) d1,.d2,. <. 1e9|d3
+  end.
+end.
+)
+
+NB. y array of dayno, return sql-c-time struct 6 bytes, short=2 bytes int=4 bytes
+NB. short HH
+NB. short MM
+NB. short SS
+time2odbc=: 4 : 0
+NB. bug when y is a vector with leading zero  => always return single <'null'
+NB.                              non leading zero => return as 1800-01-01
+if. (0~:x) *. (0=y) *. 1=#y do. NB. singleton zero
+  if. 0&= #@$ y do.
+    <6#{.a.         NB. same length as not null for easy packing in column mode
+  else.
+    <,: 6#{.a.      NB. shape
+  end.
+else.
+  if. 0=x do.
+    < (1&ic) , <. _3&{.("1) (0&".)@(-.&'dts{}')"1 ('- : T Z z ') charsub y
+  elseif. 1=x do.
+    < (1&ic) , <. 24 60 60&#:@(86400&*) (- <.) ,y
+  elseif. 2=x do.
+    < (1&ic) , <. 24 60 60&#:@(86400&|) (%&1e9) d3=. (+&(EpochOffset*dayns)) ,y
+  end.
+end.
+)
+
+NB. y array of dayno, return sql-c-ss-time2 struct 12 bytes, short=2 bytes int=4 bytes
+NB. short HH
+NB. short MM
+NB. short SS
+NB. int billionth fraction  (% 1e9)
+timex2odbc=: 4 : 0
+NB. bug when y is a vector with leading zero  => always return single <'null'
+NB.                              non leading zero => return as 1800-01-01
+if. (0~:x) *. (0=y) *. 1=#y do. NB. singleton zero
+  if. 0&= #@$ y do.
+    <12#{.a.         NB. same length as not null for easy packing in column mode
+  else.
+    <,: 12#{.a.      NB. shape
+  end.
+else.
+  if. 0=x do.
+    d1=. <. d0=. _3&{.("1) (0&".)@(-.&'dts{}')"1 ('- : T Z z ') charsub y
+    d2=. 1&| {:"1 d0
+    < (1&ic@:(,&0)@:<.@:}: , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) d1,.d2
+  elseif. 1=x do.
+    < (1&ic@:(,&0)@:<. , 2&ic@:<.@((10^(9-FraSecond))&*)@<.@((10^FraSecond)&*)@(1&|)@:{:)("1) 24 60 60&#:@(86400&*) (- <.) ,y
+  elseif. 2=x do.
+    d2=. 24 60 60&#:@(86400&|) <.@(%&1e9) d3=. (+&(EpochOffset*dayns)) ,y
+    < (1&ic@:(,&0)@:}: , 2&ic@:{:)("1) d2 ,. <. 1e9|d3
+  end.
+end.
+)
+
+NB. ---------------------------------------------------------
 
 NB. format (getlasterror) messages as char lists
 fmterr=: [: ; ([: ":&.> ]) ,&.> ' '"_
@@ -89,43 +271,45 @@ isca=: 3!:0 e. 2"_
 NB. convert integer to string
 cvt2str=: 'a'&,@":
 
-date2db=: 3 : 0
+NB. 6+10 bytes: {d 'yyyy-mm-dd'}
+date2db=: 4 : 0
 y=. >y
 y=. <.y
-if. (DateTimeNull=y) *. 1=#y do. NB. singleton null
+if. (((2=x){::DateTimeNull;EpochNull)=y) *. 1=#y do. NB. singleton null
   if. 0&= #@$ y do.
     <16{.'NULL'  NB. same length as not null for easy packing in column mode
   else.
     <,: 16{.'NULL'  NB. shape
   end.
 else.
-  a=. 8&":@(1&todate)("0) 0 (I. DateTimeNull=y)}y
-  z=. <'{d ''' ,("1) (0 1 2 3&{("1) a) ,("1) '-' ,("1) (4 5&{("1) a) ,("1) '-' ,("1) (6 7&{("1) a) ,("1) '''}'  NB. ODBC escape sequence
+  < (16{.'NULL' ) g} '{d ''' ,("1) (x&fmtddtsn 0 (g=. I. ((2=x){::DateTimeNull;EpochNull)=y)}y) ,("1) '''}'
 end.
 )
 
-datetime2db=: 3 : 0
+NB. 7+19+(+*)FraSecond bytes: {ts 'yyyy-mm-dd HH:MM:SS[.fff]'}
+datetime2db=: 4 : 0
 y=. >y
-if. (DateTimeNull=y) *. 1=#y do. NB. singleton null
+if. (((2=x){::DateTimeNull;EpochNull)=y) *. 1=#y do. NB. singleton null
   if. 0&= #@$ y do.
-    <30{.'NULL'  NB. same length as not null for easy packing in column mode
+    <(26+(+*)FraSecond){.'NULL'  NB. same length as not null for easy packing in column mode
   else.
-    <,: 30{.'NULL'  NB. shape
+    <,: (26+(+*)FraSecond){.'NULL'  NB. shape
   end.
 else.
-  <'{ts ''' ,("1) (isotimestamp 1 tsrep *&(24*60*60*1000) 0 (I. DateTimeNull=y)}y) ,("1) '''}'  NB. ODBC escape sequence  {ts '2002-09-22 21:58:08.176'}
+  < ((26+(+*)FraSecond){.'NULL' ) g} '{ts ''' ,("1) (x&fmtdtsn 0 (g=. I. ((2=x){::DateTimeNull;EpochNull)=y)}y) ,("1) '''}'
 end.
 )
 
-time2db=: 3 : 0
+NB. 6+8+(+*)FraSecond bytes: {t 'HH:MM:SS[.fff]'}
+time2db=: 4 : 0
 y=. >y
-if. (DateTimeNull=y) *. 1=#y do. NB. singleton null
+if. (((2=x){::DateTimeNull;EpochNull)=y) *. 1=#y do. NB. singleton null
   if. 0&= #@$ y do.
-    <18{.'NULL'  NB. same length as not null for easy packing in column mode
+    <(14+(+*)FraSecond){.'NULL'  NB. same length as not null for easy packing in column mode
   else.
-    <,: 18{.'NULL'  NB. shape
+    <,: (14+(+*)FraSecond){.'NULL'  NB. shape
   end.
 else.
-  <'{t ''' ,("1) (fmttdtsn 0 (I. DateTimeNull=y)}y) ,("1) '''}'  NB. ODBC escape sequence  {t '21:58:08.176'}
+  < ((14+(+*)FraSecond){.'NULL' ) g} '{t ''' ,("1) (x&fmttdtsn 0 (g=. I. ((2=x){::DateTimeNull;EpochNull)=y)}y) ,("1) '''}'
 end.
 )

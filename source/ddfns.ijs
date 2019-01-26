@@ -74,6 +74,9 @@ elseif. type e. SQL_TYPE_TIME do.
 elseif. type e. SQL_SS_TIME2 do.
   len=. 12 [ tartype=. SQL_C_BINARY
   (bname)=: (rows,len)$' '
+elseif. type e. SQL_SS_TIMESTAMPOFFSET do.
+  len=. 20 [ tartype=. SQL_C_BINARY
+  (bname)=: (rows,len)$' '
 elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
   len=. fat >: wchar2char * precision [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
@@ -92,6 +95,22 @@ end.
 sqlbindcol sh;col;tartype;(vad bname);len;<vad blname
 )
 
+NB. yyyy mm dd H M S nano
+NB. combine nano into S
+date7to6=: 3 : 0
+d0=. 5{."1 d=. y
+'d1 d2'=. |: 5 6{"1 d
+d=. d0,.d1+d2%1e9
+)
+
+NB. H M S nano
+NB. combine nano into S
+time4to3=: 3 : 0
+d0=. 2{."1 d=. y
+'d1 d2'=. |: 2 3{"1 d
+d=. d0,.d1+d2%1e9
+)
+
 NB. =========================================================
 NB. main ODBC verbs
 NB. words marked with --> have an external interface all
@@ -103,7 +122,30 @@ NB. (fmtdts) decodes and formats datetime columns.
 NB.
 NB. monad:  fmtdts ctDatetime
 
-d=. dts y
+d=. date7to6@:dts y
+0&fmtdtsn d
+)
+
+fmtdtsx=: 3 : 0
+d=. date7to6@:dtsx y
+0&fmtdtsn d
+)
+
+fmtdtsn=: 3 : 0
+0 fmtdtsn y
+:
+if. 0=x do.    NB.  6 components
+  d=. y
+elseif. 1=x do.  NB. dayno
+  d1=. 3{."1 todate d0=. <. y
+  d2=. 24 60 60&#:@(86400&*) y-d0
+  d=. d1,.d2
+elseif. 2=x do.  NB. epoch
+  d1=. 3{."1 todate <.@:(%&86400) d0=. (%&1e9)@:(+&(EpochOffset*dayns)) y
+  d2=. 24 60 60&#:@(86400&|) d0
+  d=. d1,.d2
+end.
+
 b=. ({:"1 d ) <: 60 NB. NIMP LAME QUESTION? how do we "officially" detect null values
 
 NB. ANSWER requires a status array to be filled during the fetch (BINDST_sh)
@@ -112,8 +154,8 @@ NB. array the NULL'ness of data cannot be reliably inferred.
 NB. Null dates usually appear as blanks but without status
 NB. checking this cannot be trusted.
 
-NB. convert to yyyy-mm-dd hr:mn:ss format
-s=. $d=. (4,5#3) ": b *"0 1 d
+NB. convert to yyyy-mm-dd hr:mn:ss[.fff] format
+s=. $d=. (4,(4#3),(3+(+*)FraSecond) j. FraSecond) ": b *"0 1 d
 d=. , d
 d=. s$'0'(I. ' '=d)}d
 d=. ((#d)#,:'-- ::') (<a:;4 7 10 13 16)} d
@@ -123,6 +165,20 @@ d=. ((#d)#,:'-- ::') (<a:;4 7 10 13 16)} d
 NB. fmtddts (date only)
 fmtddts=: 3 : 0
 d=. ddts y
+0&fmtddtsn d
+)
+
+fmtddtsn=: 3 : 0
+0 fmtddtsn y
+:
+if. 0=x do.    NB.  3 components
+  d=. <.y
+elseif. 1=x do.  NB. dayno
+  d=. todate <. y
+elseif. 2=x do.  NB. epoch
+  d=. todate <.@:(%&86400) d0=. (%&1e9)@:(+&(EpochOffset*dayns)) y
+end.
+
 s=. $d=. (4,2#3) ": d
 d=. , d
 d=. s$'0'(I. ' '=d)}d
@@ -132,8 +188,22 @@ d=. ((#d)#,:'--') (<a:;4 7)} d
 
 NB. fmttdts (time only)
 fmttdts=: 3 : 0
-d=. tdts y
-s=. $d=. (2 3 3) ": d
+d=. time4to3@:tdts y
+0&fmttdtsn d
+)
+
+fmttdtsn=: 3 : 0
+0 fmttdtsn y
+:
+if. 0=x do.    NB.  3 components
+  d=. y
+elseif. 1=x do.  NB. dayno
+  d=. 24 60 60&#:@(86400&*) y
+elseif. 2=x do.  NB. epoch
+  d=. 24 60 60&#:@(86400&|) (%&1e9)@:(+&(EpochOffset*dayns)) y
+end.
+
+s=. $d=. (2 3,(3+(+*)FraSecond)) ": d
 d=. , d
 d=. s$'0'(I. ' '=d)}d
 d=. ((#d)#,:'::') (<a:;2 5)} d
@@ -142,42 +212,82 @@ d=. ((#d)#,:'::') (<a:;2 5)} d
 
 NB. fmttdts2 (time only)
 fmttdts2=: 3 : 0
-d=. tdts2 y
-s=. $d=. (2 3 7j3) ": d
-d=. , d
-d=. s$'0'(I. ' '=d)}d
-d=. ((#d)#,:'::') (<a:;2 5)} d
-({:$d) {."0 1 d
+d=. time4to3@:tdts2 y
+0&fmttdtsn d
 )
 
-NB. fmttdts (time only)
-fmttdtsn=: 3 : 0
-d=. 24 60 60&#:@(86400&*) y
-s=. $d=. (2 3 3) ": <.d
-d=. , d
-d=. s$'0'(I. ' '=d)}d
-d=. ((#d)#,:'::') (<a:;2 5)} d
-({:$d) {."0 1 d
-)
-
-NB. fmtdtsnum as dayno
-fmtdtsnum=: 3 : 0
-d=. dts y
+NB. fmtdts_num as dayno
+fmtdts_num=: 3 : 0
+d=. date7to6@:dts y
 a=. todayno@(3&{.)"1 d
 b=. ((% 1 60 60 24) #. |.@(0&,))@(3&}.)"1 d
 ,. a+b
 )
 
-NB. fmtddtsnum as dayno (date only)
-fmtddtsnum=: 3 : 0
+NB. fmtdtsx_num as dayno
+fmtdtsx_num=: 3 : 0
+d=. date7to6@:dtsx y
+a=. todayno@(3&{.)"1 d
+b=. ((% 1 60 60 24) #. |.@(0&,))@(3&}.)"1 d
+,. a+b
+)
+
+NB. fmtddts_num as dayno (date only)
+fmtddts_num=: 3 : 0
 d=. ddts y
 ,.todayno"1 d
 )
 
-NB. fmttdtsnum as dayno (time only)
-fmttdtsnum=: 3 : 0
-d=. tdts y
+NB. fmttdts_num as dayno (time only)
+fmttdts_num=: 3 : 0
+d=. time4to3@:tdts y
 ,.((% 1 60 60 24) #. |.@(0&,))"1 d
+)
+
+NB. fmttdts2_num as dayno (time only)
+fmttdts2_num=: 3 : 0
+d=. time4to3@:tdts2 y
+,.((% 1 60 60 24) #. |.@(0&,))"1 d
+)
+
+NB. ---------------------------------------------------------
+NB. fmtdts_e as epoch dayno
+fmtdts_e=: 3 : 0
+d=. dts y
+a=. (-&EpochOffset)@todayno@(3&{.)"1 d
+b=. (24 60 60 & #.)@(3 4 5&{)"1 d
+f=. (2200<yy) +. 1800> yy=. {."1 d
+,. <. EpochNull (I.f)} (dayns*a)+(b*1e9)+(6&{)"1 d
+)
+
+NB. fmtdtsx_e as epoch dayno
+fmtdtsx_e=: 3 : 0
+d=. dtsx y
+a=. (-&EpochOffset)@todayno@(3&{.)"1 d
+b=. (24 60 60 & #.)@(3 4 5&{)"1 d
+f=. (2200<yy) +. 1800> yy=. {."1 d
+,. <. EpochNull (I.f)} (dayns*a)+(b*1e9)+(6&{)"1 d
+)
+
+NB. fmtddts_e as epoch dayno (date only)
+fmtddts_e=: 3 : 0
+d=. ddts y
+f=. (2200<yy) +. 1800> yy=. {."1 d
+,. <. EpochNull (I.f)} dayns&*@(-&EpochOffset)@todayno"1 d
+)
+
+NB. fmttdts_e as epoch dayno (time only)
+fmttdts_e=: 3 : 0
+d=. tdts y
+b=. ((24 60 60 & #.)@(3&{.)"1 d
+,. <. (b*1e9)+(3&{)"1 d
+)
+
+NB. fmttdts2_e as epoch dayno (time only)
+fmttdts2_e=: 3 : 0
+d=. tdts2 y
+b=. ((24 60 60 & #.)@(3&{.)"1 d
+,. <. (b*1e9)+(3&{)"1 d
 )
 
 NB. =========================================================
@@ -239,7 +349,14 @@ for_i. i.#key do.
   select. tolower i{::key
   case. 'bigint' do. UseBigInt=: -. 0-: {.i{::value
   case. 'datetimenull' do. DateTimeNull=: <. {.i{::value
-  case. 'dayno' do. UseDayNo=: -. 0-: {.i{::value
+  case. 'frasecond' do. FraSecond=: 9 <. 0 >. <. {.i{::value
+  case. 'offsetminute' do.
+    if. 0>OffsetMinute=: <. {.i{::value do.
+      OffsetMinute_bin=: 1&ic - 24 60 #: - OffsetMinute
+    else.
+      OffsetMinute_bin=: 1&ic 24 60 #: OffsetMinute
+    end.
+  case. 'dayno' do. UseDayNo=: 2 <. 0 >. <. {.i{::value
 NB.   case. 'errret' do. UseErrRet=: -. 0-: {.i{::value
   case. 'numeric' do. UseNumeric=: -. 0-: {.i{::value
   case. 'integernull' do. IntegerNull=: <. {.i{::value
@@ -685,17 +802,51 @@ NB. =========================================================
 dattimestamp=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_TYPE_TIMESTAMP;(16$CNB);17;,0
 if. sqlok z do.
-  if. UseDayNo do.
+  if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<DateTimeNull) 1}z
     else.
-      (<(%&(86400000))@tsrep dts ,: 1{::z) 1}z
+      (<fmtdts_num ,: 1{::z) 1}z
     end.
-  else.
+  elseif. 2=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
-      (<SQL_TIMESTAMP_LEN{.' ') 1}z
+      (<EpochNull) 1}z
+    else.
+      (<fmtdts_e ,: 1{::z) 1}z
+    end.
+  elseif. 0=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<(SQL_TIMESTAMP_LEN+(+*)FraSecond){.' ') 1}z
     else.
       (<,fmtdts ,:>1{z) 1}z
+    end.
+  end.
+else.
+  z
+end.
+)
+
+NB. =========================================================
+datsstimestampoffset=: 3 : 0"1
+z=. gc sqlgetdata (b0 y),SQL_C_SS_TIMESTAMPOFFSET;(20$CNB);21;,0
+if. sqlok z do.
+  if. 1=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<DateTimeNull) 1}z
+    else.
+      (<fmtdtsx_num ,: 1{::z) 1}z
+    end.
+  elseif. 2=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<EpochNull) 1}z
+    else.
+      (<fmtdtsx_e ,: 1{::z) 1}z
+    end.
+  elseif. 0=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<(SQL_TIMESTAMP_LEN+(+*)FraSecond){.' ') 1}z
+    else.
+      (<,fmtdtsx ,:>1{z) 1}z
     end.
   end.
 else.
@@ -707,13 +858,19 @@ NB. =========================================================
 datdate=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_TYPE_DATE;(6$CNB);7;,-0
 if. sqlok z do.
-  if. UseDayNo do.
+  if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<DateTimeNull) 1}z
     else.
-      (<todayno ddts ,: 1{::z) 1}z
+      (<fmtddts_num ,: 1{::z) 1}z
     end.
-  else.
+  elseif. 2=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<EpochNull) 1}z
+    else.
+      (<fmtddts_e ,: 1{::z) 1}z
+    end.
+  elseif. 0=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<SQL_DATE_LEN{.' ') 1}z
     else.
@@ -729,13 +886,19 @@ NB. =========================================================
 dattime=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_TYPE_TIME;(6$CNB);7;,-0
 if. sqlok z do.
-  if. UseDayNo do.
+  if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<DateTimeNull) 1}z
     else.
-      (<((% 1 60 60 24) #. |.@(0&,))"1 tdts ,: 1{::z) 1}z
+      (<,fmttdts_num ,:>1{z) 1}z
     end.
-  else.
+  elseif. 2=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<EpochNull) 1}z
+    else.
+      (<,fmttdts_e ,:>1{z) 1}z
+    end.
+  elseif. 0=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<SQL_TIME_LEN{.' ') 1}z
     else.
@@ -749,17 +912,23 @@ end.
 
 NB. =========================================================
 datsstime2=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(12$CNB);13;,-0
+z=. gc sqlgetdata (b0 y),SQL_C_SS_TIME2;(12$CNB);13;,-0
 if. sqlok z do.
-  if. UseDayNo do.
+  if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
       (<DateTimeNull) 1}z
     else.
-      (<((% 1 60 60 24) #. |.@(0&,))"1 tdts2 ,: 1{::z) 1}z
+      (<,fmttdts2_num ,:>1{z) 1}z
     end.
-  else.
+  elseif. 2=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
-      (<(4+SQL_TIME_LEN){.' ') 1}z
+      (<EpochNull) 1}z
+    else.
+      (<,fmttdts2_e ,:>1{z) 1}z
+    end.
+  elseif. 0=UseDayNo do.
+    if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
+      (<(SQL_TIME_LEN+(+*)FraSecond){.' ') 1}z
     else.
       (<,fmttdts2 ,:>1{z) 1}z  NB. ....
     end.
@@ -836,6 +1005,7 @@ getwlongvarchar=: datlong&.>
 gettype_timestamp=: dattimestamp&.>
 gettype_date=: datdate&.>
 gettype_time=: dattime&.>
+getss_timestampoffset=: datsstimestampoffset&.>
 getss_time2=: datsstime2&.>
 getss_xml=: 1&datlong&.>
 getuniqueid=: datchar&.>
@@ -1177,8 +1347,8 @@ NB. collect & convert data
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
         else.
-          if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2 do.
-            n=. DateTimeNull ndx } n
+          if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2,SQL_SS_TIMESTAMPOFFSET do.
+            n=. ((2=UseDayNo){::DateTimeNull;EpochNull) ndx } n
           elseif. (i{ty) e. SQL_BIT do.
             n=. 0 ndx } n
           elseif. 8 = 3!:0 n do.

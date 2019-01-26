@@ -1,6 +1,56 @@
 NB.
 NB. bulk insert from bill lam
 
+NB. emulate sqlbulkoperation
+NB. sql eg.  'select docnum,linenum,pcode,pqty from arinvl'
+NB. (sql;data1;data2) ddinsemu ch
+ddinsemu=: 4 : 0
+clr 0
+if. -.(isia y) *. isbx x do. errret ISI08 return. end.
+if. -.y e.CHALL do. errret ISI03 return. end.
+if. 2>#x do. errret ISI08 return. end.
+if. -. *./ 2>: #@$&> }.x do. errret ISI08 return. end.
+if. 1<#rows=. ~. > {.@$&>}.x do. errret ISI08 return. end.
+if. 0=rows=. fat rows do. SQL_NO_DATA return. end.
+sql=. ,0{::x
+if. SQL_ERROR-: z=. y ddcoltype~ sql do. z return. end.
+'oty ty lns'=. |: _3]\;8 13 9{("1) z
+flds=. 4{("1) z
+tbl=. ~. 2{("1) z
+NB. MSSQL, table name can not be determined, try parsing the sql statement to get table name
+if. (,a:)-:tbl do.
+NB. discard "select"
+  if. 'select'-.@-: tolower 6{.sql0=. deb sql do. errret ISI08 return. end.
+  sql0=. dlb 6}.sql0
+NB. discard " where ..." clause
+  if. 1 e. r=. ' where ' E. s=. tolower sql0 do. sql0=. sql0{.~ r i: 1
+  elseif. 1 e. r=. ' where(' E. s do. sql0=. sql0{.~ r i: 1
+  elseif. 1 e. r=. ')where ' E. s do. sql0=. sql0{.~ r i: 1
+  elseif. 1 e. r=. ')where(' E. s do. sql0=. sql0{.~ r i: 1
+  end.
+NB. parse fields and table name
+  if. 1 e. r=. ' from ' E. s=. tolower sql0 do.
+    tbl=. dltb sql0}.~ a + #' from ' [[ a=. r i: 1
+  elseif. 1 e. r=. ' from(' E. s do.
+    tbl=. dltb sql0}.~ a + #' from(' [[ a=. r i: 1
+  elseif. 1 e. r=. ')from ' E. s do.
+    tbl=. dltb sql0}.~ a + #')from ' [[ a=. r i: 1
+  elseif. 1 e. r=. ')from(' E. s do.
+    tbl=. dltb sql0}.~ a + #')from(' [[ a=. r i: 1
+  elseif. do. errret ISI08 return. end.
+NB. filter extra invalid characters
+  tbl=. < tbl -. '+/()*,-.:;=?@\^_`{|}'''
+end.
+if. (1~:#tbl) +. a: e. tbl do.  NB. more than one base table or column with base table
+  errret ISI52 return.
+end.
+if. (<:#x)~:#ty do.
+  errret ISI50 return.
+end.
+inssql=. 'insert into ', (>@{.tbl), '(', (}. ; (<',') ,("0) flds), ') values (', (}. ; (#flds)#<',?'), ')'
+z=. (inssql ; (|: oty,.lns,.ty) ; (}.x)) ddparm y
+)
+
 ddins=: 4 : 0
 clr 0
 if. -.(isia y) *. isbx x do. errret ISI08 return. end.
@@ -183,7 +233,7 @@ if. #ty do.
         end.
         assert. nrows = #blname~
         q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
-      case. <SQL_LONGVARCHAR do.
+      case. SQL_LONGVARCHAR do.
         if. 2 -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -193,7 +243,7 @@ if. #ty do.
         (bname)=: ,a=. ln&{."1 brow&{ >(of+i){x
         (blname)=: nrows$SQL_NULL_DATA
         q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
-      case. <SQL_LONGVARBINARY do.
+      case. SQL_LONGVARBINARY do.
         if. 2 -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -203,70 +253,93 @@ if. #ty do.
         (bname)=: ,a=. ln&{."1 brow&{ >(of+i){x
         (blname)=: nrows$SQL_NULL_DATA
         q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
-      case. SQL_TYPE_DATE;SQL_TYPE_TIME;SQL_TYPE_TIMESTAMP;SQL_SS_TIME2 do.
+      case. SQL_TYPE_DATE;SQL_TYPE_TIME;SQL_TYPE_TIMESTAMP;SQL_SS_TIME2;SQL_SS_TIMESTAMPOFFSET do.
+        fm=. i{ty
         scale=. 0
-        if. 2 e.~ 3!:0 data=. >(of+i){x do.
-          a=. data
-          select. <3{.{.a
-          case. <'{d ' do. fm=. SQL_TYPE_DATE [ prec=. 10
-          case. <'{t ' do. fm=. SQL_TYPE_TIME [ prec=. 12
-          case. <'{ts' do. fm=. SQL_TYPE_TIMESTAMP [ prec=. 23 [ scale=. 3
+        if. 1 4 8 e.~ 3!:0 data=. >(of+i){x do.
+          nnul=. +/ nul=. ((2=UseDayNo){::DateTimeNull;EpochNull) = ,data
+          select. i{ty
+          case. SQL_TYPE_DATE do.
+            prec=. 10
+            if. IFTIMESTRUC do.
+              a=. >(1>.UseDayNo)&date2odbc data
+            else.
+              a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&date2db("1) 0 (I. nul)} data
+            end.
+          case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
+            prec=. 8+(+*)FraSecond
+            scale=. FraSecond
+            if. IFTIMESTRUC do.
+              a=. >(1>.UseDayNo)&(time2odbc`timex2odbc@.(SQL_SS_TIME2=i{ty)) data
+            else.
+              a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&time2db("1) 0 (I. nul)} data
+            end.
+          case. SQL_TYPE_TIMESTAMP;SQL_SS_TIMESTAMPOFFSET do.
+            prec=. 19+(+*)FraSecond
+            scale=. FraSecond
+            if. IFTIMESTRUC do.
+              a=. >(1>.UseDayNo)&(datetime2odbc`datetimex2odbc@.(SQL_SS_TIMESTAMPOFFSET=i{ty)) data
+            else.
+              a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&datetime2db("1) 0 (I. nul)} data
+            end.
+          end.
+          (bname)=: ,a
+          (blname)=: nrows$#{.a
+          (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
+        elseif. 2 e.~ 3!:0 data do.
+          data=. (1&u: ::])("1) data
+          nnul=. +/ nul=. (*./"1 e.&'{}tsd '"1 data) +. (+./"1 '1800-01-01'&E."1 data) +. (+./"1 'NULL'&E."1 data)
+          select. 3{.{.data
+          case. '{d ' do. fm=. SQL_TYPE_DATE [ prec=. 10
+          case. '{t ' do. fm=. SQL_TYPE_TIME [ prec=. 8+(+*)FraSecond [ scale=. FraSecond
+          case. '{ts' do. fm=. SQL_TYPE_TIMESTAMP [ prec=. 19+(+*)FraSecond [ scale=. FraSecond
           case. do.  NB. in the form '2001-03-09 00:00:00'
             select. i{ty
-            case. <SQL_TYPE_DATE do.
-              fm=. i{ty
+            case. SQL_TYPE_DATE do.
               prec=. 10
-              if. -. '{' e. tolower {.("1) a do.  NB. null
-                a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{d '''),("1) (10{.("1) a),("1) '''}'
+              if. IFTIMESTRUC do.
+                a=. >0&date2odbc data
+              else.
+                if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+                  a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{d '''),("1) (prec{.("1) data),("1) '''}'
+                end.
               end.
             case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
-              fm=. i{ty
-              prec=. 12
-              if. -. '{' e. tolower {.("1) a do.  NB. null
-                a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{t '''),("1) (11}.("1) a),("1) '''}'
+              prec=. 8+(+*)FraSecond
+              scale=. FraSecond
+              if. IFTIMESTRUC do.
+                a=. >0&(time2odbc`timex2odbc@.(SQL_SS_TIME2=i{ty)) data
+              else.
+                if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+                  a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{t '''),("1) (prec{.("1) data),("1) '''}'
+                end.
               end.
-            case. <SQL_TYPE_TIMESTAMP do.
-              fm=. i{ty
-              prec=. 23
-              scale=. 3  NB. prec == 20 + scale
-              if. -. '{' e. tolower {.("1) a do.  NB. null
-                a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{ts '''),("1) a ,("1) '''}'
+            case. SQL_TYPE_TIMESTAMP;SQL_SS_TIMESTAMPOFFSET do.
+              prec=. 19+(+*)FraSecond
+              scale=. FraSecond
+              if. IFTIMESTRUC do.
+                a=. >0&(datetime2odbc`datetimex2odbc@.(SQL_SS_TIMESTAMPOFFSET=i{ty)) data
+              else.
+                if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+                  a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{ts '''),("1) (prec{.("1) data) ,("1) '''}'
+                end.
               end.
             end.
           end.
           (bname)=: ,a
           (blname)=: nrows$#{.a
-          if. nnul=. +/ nul=. (*./"1 e.&'{}tsd '"1 a) +. (+./"1 '1800-01-01'&E."1 a) +. (+./"1 'NULL'&E."1 a) do.
-            a=. (nnul#,:({:$a){.'{ts ''1800-01-01 00:00:00''}') ((# i.@#)nul)} a
-            (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
-          end.
-        elseif. 1 4 8 e.~ 3!:0 data do.
-          nnul=. +/ nul=. DateTimeNull = ,data
-          select. i{ty
-          case. <SQL_TYPE_DATE do.
-            fm=. i{ty
-            prec=. 10
-            a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >date2db("1) 0 (I. nul)} ,data
-          case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
-            fm=. i{ty
-            a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >time2db("1) 0 (I. nul)} ,data
-          case. <SQL_TYPE_TIMESTAMP do.
-            fm=. i{ty
-            prec=. 23
-            scale=. 3  NB. prec == 20 + scale
-            a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >datetime2db("1) 0 (I. nul)} ,data
-          end.
-          (bname)=: ,a
-          (blname)=: nrows$#{.a
-          if. nnul do.
-            (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
-          end.
+          (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
         elseif. do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
           r return.
         end.
-        q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
+NB. SQLSVR need specific precision for date time fields
+        if. IFTIMESTRUC do.
+          q=. sh;(>:i);fm;(vad bname);(#{.a);(<vad blname)
+        else.
+          q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
+        end.
       case. do.
         erasebind sh [ freestmt sh [ r=. errret ISI51
         if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -390,56 +463,6 @@ else.
 end.
 freestmt sh
 z
-)
-
-NB. emulate sqlbulkoperation
-NB. sql eg.  'select docnum,linenum,pcode,pqty from arinvl'
-NB. (sql;data1;data2) ddinsemu ch
-ddinsemu=: 4 : 0
-clr 0
-if. -.(isia y) *. isbx x do. errret ISI08 return. end.
-if. -.y e.CHALL do. errret ISI03 return. end.
-if. 2>#x do. errret ISI08 return. end.
-if. -. *./ 2>: #@$&> }.x do. errret ISI08 return. end.
-if. 1<#rows=. ~. > {.@$&>}.x do. errret ISI08 return. end.
-if. 0=rows=. fat rows do. SQL_NO_DATA return. end.
-sql=. ,0{::x
-if. SQL_ERROR-: z=. y ddcoltype~ sql do. z return. end.
-'oty ty lns'=. |: _3]\;8 13 9{("1) z
-flds=. 4{("1) z
-tbl=. ~. 2{("1) z
-NB. MSSQL, table name can not be determined, try parsing the sql statement to get table name
-if. (,a:)-:tbl do.
-NB. discard "select"
-  if. 'select'-.@-: tolower 6{.sql0=. deb sql do. errret ISI08 return. end.
-  sql0=. dlb 6}.sql0
-NB. discard " where ..." clause
-  if. 1 e. r=. ' where ' E. s=. tolower sql0 do. sql0=. sql0{.~ r i: 1
-  elseif. 1 e. r=. ' where(' E. s do. sql0=. sql0{.~ r i: 1
-  elseif. 1 e. r=. ')where ' E. s do. sql0=. sql0{.~ r i: 1
-  elseif. 1 e. r=. ')where(' E. s do. sql0=. sql0{.~ r i: 1
-  end.
-NB. parse fields and table name
-  if. 1 e. r=. ' from ' E. s=. tolower sql0 do.
-    tbl=. dltb sql0}.~ a + #' from ' [[ a=. r i: 1
-  elseif. 1 e. r=. ' from(' E. s do.
-    tbl=. dltb sql0}.~ a + #' from(' [[ a=. r i: 1
-  elseif. 1 e. r=. ')from ' E. s do.
-    tbl=. dltb sql0}.~ a + #')from ' [[ a=. r i: 1
-  elseif. 1 e. r=. ')from(' E. s do.
-    tbl=. dltb sql0}.~ a + #')from(' [[ a=. r i: 1
-  elseif. do. errret ISI08 return. end.
-NB. filter extra invalid characters
-  tbl=. < tbl -. '+/()*,-.:;=?@\^_`{|}'''
-end.
-if. (1~:#tbl) +. a: e. tbl do.  NB. more than one base table or column with base table
-  errret ISI52 return.
-end.
-if. (<:#x)~:#ty do.
-  errret ISI50 return.
-end.
-inssql=. 'insert into ', (>@{.tbl), '(', (}. ; (<',') ,("0) flds), ') values (', (}. ; (#flds)#<',?'), ')'
-z=. (inssql ; (|: oty,.lns,.ty) ; (}.x)) ddparm y
 )
 
 NB.* ddsparm v
@@ -695,62 +718,80 @@ for_i. i.ncol do.
     end.
     bytelen=. bytelen, bl
     q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_CHAR;SQL_VARCHAR;(colsize);0;(vad bname);bl;(<vad blname)
-  case. SQL_TYPE_DATE;SQL_TYPE_TIME;SQL_TYPE_TIMESTAMP;SQL_SS_TIME2 do.
+  case. SQL_TYPE_DATE;SQL_TYPE_TIME;SQL_TYPE_TIMESTAMP;SQL_SS_TIME2;SQL_SS_TIMESTAMPOFFSET do.
+    fm=. i{ty
     scale=. 0
-    if. 2 e.~ 3!:0 data=. >(of+i){x do.
-      a=. 1&u:"1 data
-      select.<3{.{.a
+    if. 1 4 8 e.~ 3!:0 data=. >(of+i){x do.
+      nnul=. +/ nul=. ((2=UseDayNo){::DateTimeNull;EpochNull) = ,data
+      select. i{ty
+      case. SQL_TYPE_DATE do.
+        prec=. 10
+        if. IFTIMESTRUC do.
+          a=. >(1>.UseDayNo)&date2odbc data
+        else.
+          a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&date2db("1) 0 (I. nul)} data
+        end.
+      case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
+        prec=. 8+(+*)FraSecond
+        scale=. FraSecond
+        if. IFTIMESTRUC do.
+          a=. >(1>.UseDayNo)&(time2odbc`timex2odbc@.(SQL_SS_TIME2=i{ty)) data
+        else.
+          a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&time2db("1) 0 (I. nul)} data
+        end.
+      case. SQL_TYPE_TIMESTAMP;SQL_SS_TIMESTAMPOFFSET do.
+        prec=. 19+(+*)FraSecond
+        scale=. FraSecond
+        if. IFTIMESTRUC do.
+          a=. >(1>.UseDayNo)&(datetime2odbc`datetimex2odbc@.(SQL_SS_TIMESTAMPOFFSET=i{ty)) data
+        else.
+          a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >(1>.UseDayNo)&datetime2db("1) 0 (I. nul)} data
+        end.
+      end.
+      (blname)=: nrows$bl=. {:@$a [ nrows=. {.@$ a
+      (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
+    elseif. 2 e.~ 3!:0 data do.
+      data=. (1&u: ::])("1) data
+      nnul=. +/ nul=. (*./"1 e.&'{}tsd '"1 data) +. (+./"1 '1800-01-01'&E."1 data) +. (+./"1 '1900-01-01'&E."1 data) +. (+./"1 'NULL'&E."1 data)
+      select.<3{.{.data
       case. <'{d ' do. fm=. SQL_TYPE_DATE [ prec=. 10
-      case. <'{t ' do. fm=. SQL_TYPE_TIME [ prec=. 12
-      case. <'{ts' do. fm=. SQL_TYPE_TIMESTAMP [ prec=. 23 [ scale=. 3
+      case. <'{t ' do. fm=. SQL_TYPE_TIME [ prec=. 8+(+*)FraSecond [ scale=. FraSecond
+      case. <'{ts' do. fm=. SQL_TYPE_TIMESTAMP [ prec=. 19+(+*)FraSecond [ scale=. FraSecond
       case. do.  NB. in the form '2001-03-09 00:00:00'
         select. i{ty
         case. SQL_TYPE_DATE do.
-          fm=. i{ty
           prec=. 10
-          if. -. '{' e. tolower {.("1) a do.  NB. null
-            a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{d '''),("1) (10{.("1) a),("1) '''}'
+          if. IFTIMESTRUC do.
+            a=. >0&date2odbc("1) data
+          else.
+            if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+              a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{d '''),("1) (prec{.("1) data),("1) '''}'
+            end.
           end.
         case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
-          fm=. i{ty
-          prec=. 12
-          if. -. '{' e. tolower {.("1) a do.  NB. null
-            a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{t '''),("1) (11}.("1) a),("1) '''}'
+          prec=. 8+(+*)FraSecond
+          scale=. FraSecond
+          if. IFTIMESTRUC do.
+            a=. >0&(time2odbc`timex2odbc@.(SQL_SS_TIME2=i{ty)) data
+          else.
+            if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+              a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{t '''),("1) (prec{.("1) data),("1) '''}'
+            end.
           end.
-        case. SQL_TYPE_TIMESTAMP do.
-          fm=. i{ty
-          prec=. 23
-          scale=. 3  NB. prec == 20 + scale
-          if. -. '{' e. tolower {.("1) a do.  NB. null
-            a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{ts '''),("1) a ,("1) '''}'
+        case. SQL_TYPE_TIMESTAMP;SQL_SS_TIMESTAMPOFFSET do.
+          prec=. 19+(+*)FraSecond
+          scale=. FraSecond
+          if. IFTIMESTRUC do.
+            a=. >0&(datetime2odbc`datetimex2odbc@.(SQL_SS_TIMESTAMPOFFSET=i{ty)) data
+          else.
+            if. -. '{' e. tolower {.("1) a=. data do.  NB. null
+              a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) ('{ts '''),("1) (prec{.("1) data) ,("1) '''}'
+            end.
           end.
         end.
       end.
       (blname)=: nrows$bl=. {:@$a [ nrows=. {.@$ a
-      if. nnul=. +/ nul=. (*./"1 e.&'{}tsd '"1 a) +. (+./"1 '1800-01-01'&E."1 a) +. (+./"1 'NULL'&E."1 a) do.
-        (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
-      end.
-    elseif. 1 4 8 e.~ 3!:0 data do.
-      nnul=. +/ nul=. DateTimeNull = ,data
-      select. i{ty
-      case. <SQL_TYPE_DATE do.
-        fm=. i{ty
-        prec=. 10
-        a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >date2db("1) 0 (I. nul)} ,data
-      case. SQL_TYPE_TIME;SQL_SS_TIME2 do.
-        fm=. i{ty
-        prec=. 12
-        a=. (_2&}.)@(4&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >time2db("1) 0 (I. nul)} ,data
-      case. <SQL_TYPE_TIMESTAMP do.
-        fm=. i{ty
-        prec=. 23
-        scale=. 3  NB. prec == 20 + scale
-        a=. (_2&}.)@(5&}.)^:('{'={.)("1)^:('MSSQL'-:dbmsname) >datetime2db("1) 0 (I. nul)} ,data
-      end.
-      (blname)=: nrows$bl=. {:@$a [ nrows=. {.@$ a
-      if. nnul do.
-        (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
-      end.
+      (blname)=: SQL_NULL_DATA (I. nul)} (blname)~
     elseif. do.
       erasebind sh [ freestmt sh [ r=. errret ISI51
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -758,7 +799,12 @@ for_i. i.ncol do.
     end.
     (bname)=: a
     bytelen=. bytelen, bl
-    q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_CHAR;fm;prec;scale;(vad bname);({:@$a);(<vad blname)
+NB. SQLSVR need specific precision for date time fields
+    if. IFTIMESTRUC do.
+      q=. sh;(>:i);SQL_PARAM_INPUT;fm;fm;prec;scale;(vad bname);({:@$a);(<vad blname)
+    else.
+      q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_CHAR;fm;prec;scale;(vad bname);({:@$a);(<vad blname)
+    end.
   case. SQL_LONGVARBINARY do.
     if. 2~:$$a=. >(of+i){x do. a=. ,:@, a end.
     if. 0=#,a do. a=. ($a)$'' end.
