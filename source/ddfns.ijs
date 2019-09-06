@@ -279,14 +279,14 @@ f=. (2200<yy) +. 1800> yy=. {."1 d
 NB. fmttdts_e as epoch dayno (time only)
 fmttdts_e=: 3 : 0
 d=. tdts y
-b=. ((24 60 60 & #.)@(3&{.)"1 d
+b=. (24 60 60 & #.)@(3&{.)"1 d
 ,. <. (b*1e9)+(3&{)"1 d
 )
 
 NB. fmttdts2_e as epoch dayno (time only)
 fmttdts2_e=: 3 : 0
 d=. tdts2 y
-b=. ((24 60 60 & #.)@(3&{.)"1 d
+b=. (24 60 60 & #.)@(3&{.)"1 d
 ,. <. (b*1e9)+(3&{)"1 d
 )
 
