@@ -680,6 +680,7 @@ for_i. i.ncol do.
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
       r return.
     end.
+    (bname)=: a
     (blname)=: nrows$bl=. 1
     bytelen=. bytelen, bl
     q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_BIT;SQL_BIT;(1);0;(vad bname);(1);(<vad blname)

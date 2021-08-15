@@ -1952,6 +1952,7 @@ for_i. i.ncol do.
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
       r return.
     end.
+    (bname)=: a
     (blname)=: nrows$bl=. 1
     bytelen=. bytelen, bl
     q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_BIT;SQL_BIT;(1);0;(vad bname);(1);(<vad blname)
@@ -2214,6 +2215,7 @@ SQL_DESC_TABLE_NAME=: 15
 SQL_DESC_TYPE_NAME=: 14
 
 SQL_SIGNED_OFFSET=: _20
+SQL_C_BIT=: _7
 SQL_C_CHAR=: 1
 SQL_C_DOUBLE=: 8
 SQL_C_LONG=: 4
