@@ -40,7 +40,7 @@ elseif. type e. SQL_DECIMAL,SQL_NUMERIC do.
 elseif. type e. SQL_BINARY,SQL_VARBINARY do.
   len=. fat >:precision [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
-elseif. type e. SQL_INTEGER,SQL_SMALLINT,SQL_TINYINT,SQL_BIT do.
+elseif. type e. SQL_INTEGER,SQL_SMALLINT,SQL_TINYINT do.
   if. IF64 do.
     len=. 4 [ tartype=. SQL_C_SLONG
     (bname)=: (rows,4)$CNB
@@ -85,7 +85,7 @@ elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
   (bname)=: (rows,1)$2.5-2.5
 elseif. type e. SQL_BIT do.
   len=. 1 [ tartype=. SQL_C_BIT
-  (bname)=: (rows,len)$0
+  (bname)=: (rows,1en)$0
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
@@ -778,12 +778,12 @@ end.
 
 NB. =========================================================
 datbit=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(1${.a.);1;,0
+z=. gc sqlgetdata (b0 y),SQL_C_BIT;(1${.a.);1;,0
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<0) 1} z
   else.
-    (<a.&i. fat >1{z) 1} z
+    (< ({.a.) ~: fat >1{z) 1} z
   end.
 else.
   z

@@ -177,7 +177,7 @@ if. #ty do.
           assert. nrows = #blname~
           q=. sh;(>:i);SQL_C_CHAR;(vad bname);(#{.a);(<vad blname)
         end.
-      case. SQL_INTEGER;SQL_SMALLINT;SQL_BIT;SQL_TINYINT do.
+      case. SQL_INTEGER;SQL_SMALLINT;SQL_TINYINT do.
         if. (1 4 8) -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -219,6 +219,15 @@ if. #ty do.
           (blname)=: nrows$8
         end.
         q=. sh;(>:i);SQL_C_DOUBLE;(vad bname);8;(<vad blname)
+      case. SQL_BIT do.
+        if. (1 4 8) -.@e.~ 3!:0 >(of+i){x do.
+          erasebind sh [ freestmt sh [ r=. errret ISI51
+          if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
+          r return.
+        end.
+        (bname)=: 0~: brow&{ >(of+i){x
+        (blname)=: nrows$1
+        q=. sh;(>:i);SQL_C_BIT;(vad bname);1;(<vad blname)
       case. SQL_CHAR;SQL_VARCHAR;SQL_WCHAR;SQL_WVARCHAR do.
         if. 2 -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
@@ -675,12 +684,12 @@ for_i. i.ncol do.
     q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_DOUBLE;SQL_DOUBLE;0;0;(vad bname);0;(<vad blname)
   case. SQL_BIT do.
     if. 2~:$$a=. >(of+i){x do. a=. ,:@, a end.
-    if. 1~: 3!:0 a do.
+    if. 1 4 8 -.@e.~ 3!:0 a do.
       erasebind sh [ freestmt sh [ r=. errret ISI51
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
       r return.
     end.
-    (bname)=: a
+    (bname)=: 0~:a
     (blname)=: nrows$bl=. 1
     bytelen=. bytelen, bl
     q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_BIT;SQL_BIT;(1);0;(vad bname);(1);(<vad blname)
