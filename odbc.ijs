@@ -164,9 +164,15 @@ elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
 elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
   len=. 8 [ tartype=. SQL_C_DOUBLE
   (bname)=: (rows,1)$2.5-2.5
+elseif. type e. SQL_BIT do.
+  len=. 1 [ tartype=. SQL_C_BIT
+  (bname)=: (rows,len)$0
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
+elseif. type e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR do.
+  len=. 0 [ tartype=. SQL_C_BINARY
+  (bname)=: (rows,len)$''
 elseif.do. SQL_ERROR return.
 end.
 
@@ -182,6 +188,7 @@ d0=. 2{."1 d=. y
 'd1 d2'=. |: 2 3{"1 d
 d=. d0,.d1+d2%1e9
 )
+emptyrk1=: ''"1
 fmtdts=: 3 : 0
 d=. date7to6@:dts y
 0&fmtdtsn d
@@ -787,6 +794,9 @@ getss_time2=: datsstime2&.>
 getss_xml=: 1&datlong&.>
 getuniqueid=: datchar&.>
 
+getempty=: 3 : 0
+<DD_OK ; '' ; 0
+)
 iad=: 15!:14@boxopen
 vad=: <@:iad
 getcolinfo=: 3 : 0"1
@@ -1168,11 +1178,12 @@ clr 0
 if. -. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,1
 if. -. sh e.1{"1 CSPALL do. errret ISI04 return. end.
+mod=. _2=r
 r=. (r<0){r,_1
 if. SQL_ERROR-:ci=. getallcolinfo sh do.
   errret ''
 else.
-  z=. ,&.> ci getdata sh,r
+  z=. ,&.> ci getdata sh,mod{r,_2
   assert. 1= #@$&> ,z
   z
 end.
@@ -1298,8 +1309,15 @@ getdata=: 4 : 0
 'sh r'=. y
 assert. 10={:@$ x
 ty=. ; 6 {"1 x
+
+mod=. _2=r
+r=. (r<0){r,_1
 if. -.*./b=. ty e. SQL_SUPPORTED_TYPES do. errret ISI09 typeerr (-.b)#x return. end.
 gf=. (SQL_SUPPORTED_TYPES i. ty){GGETV
+if. mod do.
+lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
+gf=. (<'getempty') (I.-.lb) } gf
+end.
 cc=. <"1 sh,.>:i.#ty
 
 dat=. (0,#ty)$<''
@@ -2348,16 +2366,16 @@ SQL_SS_TIMESTAMPOFFSET=: _155['*'
 SQL_SS_XML=: _152
 SQL_VARCHAR=: 12['*'
 SQL_DEFAULT=: 99['*'
-SQL_LONGVARCHAR=: _1
+SQL_LONGVARCHAR=: _1['*'
 SQL_BINARY=: _2['*'
 SQL_VARBINARY=: _3['*'
-SQL_LONGVARBINARY=:_4
+SQL_LONGVARBINARY=:_4['*'
 SQL_BIGINT=: _5['*'
 SQL_TINYINT=: _6['*'
 SQL_BIT=: _7['*'
 SQL_WCHAR=: _8['*'
 SQL_WVARCHAR=: _9['*'
-SQL_WLONGVARCHAR=: _10
+SQL_WLONGVARCHAR=: _10['*'
 SQL_UNIQUEID=:_11['*'
 )
 settypeinfo=: 3 : 0
@@ -2387,6 +2405,9 @@ else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
 end.
+GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY,  SQL_WLONGVARCHAR
+GCNM=: GCNM ,  ;:' emptyrk1   emptyrk1            emptyrk1'
+
 assert. (#GDX) = #GCNM
 GGETV=: (sqlnames i."1'=') {."0 1 sqlnames
 GGETV=: dltb&.> <"1 'get',"1 tolower 4 }."1 GGETV

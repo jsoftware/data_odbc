@@ -53,16 +53,16 @@ SQL_SS_TIMESTAMPOFFSET=: _155['*'    NB. SQL_C_BINARY         SQL_C_CHAR    24  
 SQL_SS_XML=: _152          NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_VARCHAR=: 12['*'       NB. SQL_C_CHAR           SQL_C_CHAR    1     trctnb trbuclnb
 SQL_DEFAULT=: 99['*'       NB. SQL_C_DEFAULT        SQL_C_CHAR    1     ]
-SQL_LONGVARCHAR=: _1       NB. SQL_C_CHAR           SQL_C_CHAR    1     trbuclnb
+SQL_LONGVARCHAR=: _1['*'   NB. SQL_C_CHAR           SQL_C_CHAR    1     trbuclnb
 SQL_BINARY=: _2['*'        NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_VARBINARY=: _3['*'     NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
-SQL_LONGVARBINARY=:_4      NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
+SQL_LONGVARBINARY=:_4['*'  NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_BIGINT=: _5['*'        NB. SQL_C_SBIGINT        SQL_C_CHAR    1     ]
 SQL_TINYINT=: _6['*'       NB. SQL_C_STINYINT       SQL_C_CHAR    1     ]
 SQL_BIT=: _7['*'           NB. SQL_C_BIT            SQL_C_CHAR    1     ]
-SQL_WCHAR=: _8['*'         NB. SQL_C_WCHAR          2*SQL_C_CHAR  2     ]
-SQL_WVARCHAR=: _9['*'      NB. SQL_C_WCHAR          2*SQL_C_CHAR  2     trctnb trbuclnb
-SQL_WLONGVARCHAR=: _10     NB. SQL_C_WCHAR          2*SQL_C_CHAR  2     ]
+SQL_WCHAR=: _8['*'         NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     ]
+SQL_WVARCHAR=: _9['*'      NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     trctnb trbuclnb
+SQL_WLONGVARCHAR=: _10['*' NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     ]
 SQL_UNIQUEID=:_11['*'      NB. SQL_C_CHAR           SQL_C_CHAR    36    trctguid
 )
 
@@ -113,6 +113,9 @@ else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
 end.
+GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY,  SQL_WLONGVARCHAR
+GCNM=: GCNM ,  ;:' emptyrk1   emptyrk1            emptyrk1'
+
 assert. (#GDX) = #GCNM
 
 NB. sglgetdata datatypes gerund matches codes in SQL_SUPPORTED_TYPES

@@ -83,12 +83,15 @@ elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
 elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
   len=. 8 [ tartype=. SQL_C_DOUBLE
   (bname)=: (rows,1)$2.5-2.5
-NB. elseif. type e. SQL_BIT do.
-NB.   len=. 1 [ tartype=. SQL_C_BINARY
-NB.   (bname)=: (rows,len)$' '
+elseif. type e. SQL_BIT do.
+  len=. 1 [ tartype=. SQL_C_BIT
+  (bname)=: (rows,len)$0
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
+elseif. type e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR do.
+  len=. 0 [ tartype=. SQL_C_BINARY
+  (bname)=: (rows,len)$''
 elseif.do. SQL_ERROR return.
 end.
 
@@ -110,6 +113,9 @@ d0=. 2{."1 d=. y
 'd1 d2'=. |: 2 3{"1 d
 d=. d0,.d1+d2%1e9
 )
+
+NB. for bindcol longvalue
+emptyrk1=: ''"1
 
 NB. =========================================================
 NB. main ODBC verbs
@@ -1010,6 +1016,9 @@ getss_time2=: datsstime2&.>
 getss_xml=: 1&datlong&.>
 getuniqueid=: datchar&.>
 
+getempty=: 3 : 0
+<DD_OK ; '' ; 0
+)
 
 NB. =========================================================
 NB. (iad) integer address - returns pointer to a J array
@@ -1296,6 +1305,7 @@ NB.   ddfch sh,10  NB. next 10 rows
 NB.   ddfch sh,_1  NB. all remaining rows
 NB.
 NB. dyad:  blut =. iaBuffhint ddfch ilShRows
+NB.   blob columns allowed but ignored
 NB.
 NB.   sh =. 'select these,here,integers from reallybigtable' ddsel ch
 NB.
@@ -1768,11 +1778,12 @@ clr 0
 if. -. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,1
 if. -. sh e.1{"1 CSPALL do. errret ISI04 return. end.
+mod=. _2=r      NB. only get longvalues
 r=. (r<0){r,_1  NB. tolerate negs other than _1
 if. SQL_ERROR-:ci=. getallcolinfo sh do.
   errret ''
 else.
-  z=. ,&.> ci getdata sh,r
+  z=. ,&.> ci getdata sh,mod{r,_2
   assert. 1= #@$&> ,z
   z
 end.
@@ -1929,6 +1940,7 @@ getdata=: 4 : 0
 NB. (getdata) is the main sqlgetdata driver.
 NB.
 NB. dyad:  btGetcolinfo getdata ilShRows
+NB. if Rows is _2 only get blob types
 NB.
 NB.  ci =. getcolinfo sh
 NB.  ci getdata sh,10   NB. ten rows
@@ -1938,11 +1950,18 @@ NB.  ci getdata sh,_1   NB. all rows in stmt
 assert. 10={:@$ x
 ty=. ; 6 {"1 x
 
+mod=. _2=r      NB. only get longvalues
+r=. (r<0){r,_1  NB. tolerate negs other than _1
+
 NB. quit if any unsupported datatypes
 if. -.*./b=. ty e. SQL_SUPPORTED_TYPES do. errret ISI09 typeerr (-.b)#x return. end.
 
 NB. build gerund that fetches & converts data
 gf=. (SQL_SUPPORTED_TYPES i. ty){GGETV
+if. mod do.
+lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
+gf=. (<'getempty') (I.-.lb) } gf
+end.
 
 NB. columns numbers and stmt handles
 cc=. <"1 sh,.>:i.#ty
