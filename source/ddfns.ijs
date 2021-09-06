@@ -85,7 +85,7 @@ elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
   (bname)=: (rows,1)$2.5-2.5
 elseif. type e. SQL_BIT do.
   len=. 1 [ tartype=. SQL_C_BIT
-  (bname)=: (rows,1en)$0
+  (bname)=: (rows,len)$0
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
