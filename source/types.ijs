@@ -103,7 +103,11 @@ GDX=: GDX, SQL_WCHAR, SQL_WVARCHAR, SQL_UNIQUEID
 GCNM=: GCNM,;:'trctnbw     trctnbw   trctguid'
 
 GDX=: GDX , SQL_DECIMAL, SQL_NUMERIC, SQL_DOUBLE, SQL_FLOAT, SQL_REAL
-GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+if. UseNumeric do.
+  GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+else.
+  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]          ]'
+end.
 
 NB. handle 4 byte integers in J64
 if. IF64 do.

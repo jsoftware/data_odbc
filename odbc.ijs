@@ -2406,7 +2406,11 @@ GDX=: GDX, SQL_WCHAR, SQL_WVARCHAR, SQL_UNIQUEID
 GCNM=: GCNM,;:'trctnbw     trctnbw   trctguid'
 
 GDX=: GDX , SQL_DECIMAL, SQL_NUMERIC, SQL_DOUBLE, SQL_FLOAT, SQL_REAL
-GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+if. UseNumeric do.
+  GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+else.
+  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]          ]'
+end.
 if. IF64 do.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]        ifi       ifi           ifi         ]'
@@ -2462,6 +2466,7 @@ iscu=: (e.&2 131072 262144)@(3!:0)
 ifs=: [: ,. [: _1&ic ,
 ifi=: [: ,. [: _2&ic ,
 ffs=: [: ,. [: _1&fc ,
+rnnum=: (-."1 0)&({.a.)
 dts=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
 dtsx=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
 ddts=: 13 : '((#y),3) $ _1&ic , 6{.("1) y'

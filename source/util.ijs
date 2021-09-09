@@ -46,6 +46,9 @@ ifi=: [: ,. [: _2&ic ,
 NB. convert short float columns (real) to double float columns
 ffs=: [: ,. [: _1&fc ,
 
+NB. remove all {.a. from numeric fields when UseNumerc is false
+rnnum=: (-."1 0)&({.a.)
+
 NB.   typedef struct tagTIMESTAMP_STRUCT {
 NB.     SQLSMALLINT year;
 NB.     SQLUSMALLINT month;
