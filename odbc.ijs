@@ -2409,7 +2409,7 @@ GDX=: GDX , SQL_DECIMAL, SQL_NUMERIC, SQL_DOUBLE, SQL_FLOAT, SQL_REAL
 GCNM=: GCNM , ;:']        ]            ]           ]          ]'
 if. IF64 do.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:'ifi       ifi       ifi           ifi         ]'
+  GCNM=: GCNM , ;:' ]        ifi       ifi           ifi         ]'
 else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'

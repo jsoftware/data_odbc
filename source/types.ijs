@@ -108,7 +108,7 @@ GCNM=: GCNM , ;:']        ]            ]           ]          ]'
 NB. handle 4 byte integers in J64
 if. IF64 do.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:'ifi       ifi       ifi           ifi         ]'
+  GCNM=: GCNM , ;:' ]        ifi       ifi           ifi         ]'
 else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
