@@ -777,6 +777,20 @@ end.
 )
 
 NB. =========================================================
+dattinyint=: 3 : 0"1
+z=. gc sqlgetdata (b0 y),SQL_TINYINT;(1${.a.);1;,0
+if. sqlok z do.
+  if. SQL_NULL_DATA= _1{::z do.
+    (<IntegerNull) 1} z
+  else.
+    (< a. i. fat >1{z) 1} z
+  end.
+else.
+  z
+end.
+)
+
+NB. =========================================================
 datbit=: 3 : 0"1
 z=. gc sqlgetdata (b0 y),SQL_C_BIT;(1${.a.);1;,0
 if. sqlok z do.
@@ -1004,7 +1018,7 @@ getvarchar=: datchar&.>
 getwvarchar=: datchar&.>
 getinteger=: datinteger&.>
 getsmallint=: datsmallint&.>
-gettinyint=: datbit&.>
+gettinyint=: dattinyint&.>
 getlongvarchar=: datlong&.>
 getlongvarbinary=: datlong&.>
 getwlongvarchar=: datlong&.>
