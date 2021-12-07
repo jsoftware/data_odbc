@@ -117,8 +117,8 @@ else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
 end.
-GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY,  SQL_WLONGVARCHAR
-GCNM=: GCNM ,  ;:' emptyrk1   emptyrk1            emptyrk1'
+GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR
+GCNM=: GCNM , ;:' emptyrk1   emptyrk1            emptyrk1'
 
 assert. (#GDX) = #GCNM
 

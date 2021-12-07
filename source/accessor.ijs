@@ -1,5 +1,5 @@
 getDateTimeNull=: 3 : 'DateTimeNull'
-getIntegerNull=: 3 : 'IntegerNull'
+getIntegerNull=: 3 : '(IntegerNull=IMIN){::IntegerNull;__'
 getNumericNull=: 3 : 'NumericNull'
 getFraSecond=: 3 : 'FraSecond'
 getOffsetMinute=: 3 : 'OffsetMinute'

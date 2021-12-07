@@ -365,7 +365,7 @@ for_i. i.#key do.
   case. 'dayno' do. UseDayNo=: 2 <. 0 >. <. {.i{::value
 NB.   case. 'errret' do. UseErrRet=: -. 0-: {.i{::value
   case. 'numeric' do. UseNumeric=: -. 0-: {.i{::value
-  case. 'integernull' do. IntegerNull=: <. {.i{::value
+  case. 'integernull' do. IntegerNull=: (IntegerNull=__){::IntegerNull;IMIN [ IntegerNull=: <. {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
 NB.   case. 'unicode' do. UseUnicode=: -. 0-: {.i{::value
@@ -1366,8 +1366,8 @@ NB. collect & convert data
     n=. (i_index{cv) `:0 dddata sh,i+1
 
 
-    if. _1 e. len=. dddataln sh,i+1 do.
-      if. # ndx=. I. len = _1 do.
+    if. SQL_NULL_DATA e. len=. dddataln sh,i+1 do.
+      if. # ndx=. I. len = SQL_NULL_DATA do.
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
         else.
@@ -1973,8 +1973,8 @@ if. -.*./b=. ty e. SQL_SUPPORTED_TYPES do. errret ISI09 typeerr (-.b)#x return. 
 NB. build gerund that fetches & converts data
 gf=. (SQL_SUPPORTED_TYPES i. ty){GGETV
 if. mod do.
-lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
-gf=. (<'getempty') (I.-.lb) } gf
+  lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
+  gf=. (<'getempty') (I.-.lb) } gf
 end.
 
 NB. columns numbers and stmt handles

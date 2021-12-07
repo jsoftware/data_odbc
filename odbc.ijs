@@ -1,10 +1,12 @@
 coclass 'jdd'
 
+IMAX=: IF64{::2147483647;9223372036854775807
+IMIN=: _1+-IMAX
 DateTimeNull=: _
 InitDone=: 0
-IntegerNull=: __ [ <.-2^<:32*1+IF64
+IntegerNull=: IMIN
 NumericNull=: __
-EpochNull=: IF64{:: __ ; _9223372036854775808
+EpochNull=: IF64{:: __ ; IMIN
 FraSecond=: 0
 OffsetMinute=: 0
 OffsetMinute_bin=: 1&ic 0 0
@@ -361,7 +363,7 @@ for_i. i.#key do.
     end.
   case. 'dayno' do. UseDayNo=: 2 <. 0 >. <. {.i{::value
   case. 'numeric' do. UseNumeric=: -. 0-: {.i{::value
-  case. 'integernull' do. IntegerNull=: <. {.i{::value
+  case. 'integernull' do. IntegerNull=: (IntegerNull=__){::IntegerNull;IMIN [ IntegerNull=: <. {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
   case. do. _1 return.
@@ -971,7 +973,7 @@ while.do.
 
 
     if. _1 e. len=. dddataln sh,i+1 do.
-      if. # ndx=. I. len = _1 do.
+      if. # ndx=. I. len = SQL_NULL_DATA do.
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
         else.
@@ -1327,8 +1329,8 @@ r=. (r<0){r,_1
 if. -.*./b=. ty e. SQL_SUPPORTED_TYPES do. errret ISI09 typeerr (-.b)#x return. end.
 gf=. (SQL_SUPPORTED_TYPES i. ty){GGETV
 if. mod do.
-lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
-gf=. (<'getempty') (I.-.lb) } gf
+  lb=. ty e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR
+  gf=. (<'getempty') (I.-.lb) } gf
 end.
 cc=. <"1 sh,.>:i.#ty
 
@@ -1486,21 +1488,26 @@ if. #ty do.
           if. IF64 do.
             if. UseBigInt do.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. IntegerNull, NumericNull do.
+              if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+                (bname)=: (2-2)&+ <. (1.1-1.1) b}a
+                (blname)=: SQL_NULL_DATA b}nrows$SZI
+              elseif. (1 4 e.~ 3!:0 a) *. *#b=. I. a e. IntegerNull do.
                 (bname)=: (2-2)&+ <. (2-2) b}a
-                (blname)=: _1 b}nrows$SZI
-              else.
+                (blname)=: SQL_NULL_DATA b}nrows$SZI
+              elseif. do.
                 (bname)=: (2-2)&+ <. brow&{ >(of+i){x
                 (blname)=: nrows$SZI
               end.
-
               q=. sh;(>:i);SQL_C_SBIGINT;(vad bname);SZI;(<vad blname)
             else.
               a=. , brow&{ >(of+i){x
-              if. #b=. I. a e. IntegerNull, NumericNull do.
+              if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
                 (bname)=: (_&<.) <. (1.1-1.1) b}a
-                (blname)=: _1 b}nrows$8
-              else.
+                (blname)=: SQL_NULL_DATA b}nrows$8
+              elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
+                (bname)=: (_&<.) <. (2-2) b}a
+                (blname)=: SQL_NULL_DATA b}nrows$8
+              elseif. do.
                 (bname)=: (_&<.) <. brow&{ >(of+i){x
                 (blname)=: nrows$8
               end.
@@ -1508,10 +1515,13 @@ if. #ty do.
             end.
           else.
             a=. , brow&{ >(of+i){x
-            if. #b=. I. a e.IntegerNull, NumericNull do.
+            if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
               (bname)=: (_&<.) <. (1.1-1.1) b}a
-              (blname)=: _1 b}nrows$8
-            else.
+              (blname)=: SQL_NULL_DATA b}nrows$8
+            elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
+              (bname)=: (_&<.) <. (2-2) b}a
+              (blname)=: SQL_NULL_DATA b}nrows$8
+            elseif. do.
               (bname)=: (_&<.) <. brow&{ >(of+i){x
               (blname)=: nrows$8
             end.
@@ -1531,20 +1541,26 @@ if. #ty do.
         end.
         if. IF64 do.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. IntegerNull, NumericNull do.
+          if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+            (bname)=: 2 ic , (2-2)&+ <. (1.1-.1.1) b}a
+            (blname)=: SQL_NULL_DATA b}nrows$4
+          elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
             (bname)=: 2 ic , (2-2)&+ <. (2-2) b}a
-            (blname)=: _1 b}nrows$4
-          else.
+            (blname)=: SQL_NULL_DATA b}nrows$4
+          elseif. do.
             (bname)=: 2 ic , (2-2)&+ <. brow&{ >(of+i){x
             (blname)=: nrows$4
           end.
           q=. sh;(>:i);SQL_C_SLONG;(vad bname);4;(<vad blname)
         else.
           a=. , brow&{ >(of+i){x
-          if. #b=. I. a e. IntegerNull, NumericNull do.
+          if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+            (bname)=: (2-2)&+ <. (1.1-1.1) b}a
+            (blname)=: SQL_NULL_DATA b}nrows$SZI
+          elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
             (bname)=: (2-2)&+ <. (2-2) b}a
-            (blname)=: _1 b}nrows$SZI
-          else.
+            (blname)=: SQL_NULL_DATA b}nrows$SZI
+          elseif. do.
             (bname)=: (2-2)&+ <. brow&{ >(of+i){x
             (blname)=: nrows$SZI
           end.
@@ -1557,10 +1573,13 @@ if. #ty do.
           r return.
         end.
         a=. , brow&{ >(of+i){x
-        if. #b=. I. a e. NumericNull do.
+        if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
           (bname)=: (_&<.) (1.1-1.1) b}a
-          (blname)=: _1 b}nrows$8
-        else.
+          (blname)=: SQL_NULL_DATA b}nrows$8
+        elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
+          (bname)=: (_&<.) (2-2) b}a
+          (blname)=: SQL_NULL_DATA b}nrows$8
+        elseif. do.
           (bname)=: , (_&<.) brow&{ >(of+i){x
           (blname)=: nrows$8
         end.
@@ -1884,18 +1903,24 @@ for_i. i.ncol do.
       if. IF64 do.
         if. UseBigInt do.
           if. (IF64*.(SQL_BIGINT~:i{ty)+.(0~:bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)) do.
-            if. #b=. I. a e. IntegerNull, NumericNull do.
+            if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+              (bname)=: 2&ic (2-2) + <. (1.1-1.1) b}a
+              (blname)=: SQL_NULL_DATA b}nrows$bl=. 4
+            elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
               (bname)=: 2&ic (2-2) + <. (2-2) b}a
-              (blname)=: _1 b}nrows$bl=. 4
-            else.
+              (blname)=: SQL_NULL_DATA b}nrows$bl=. 4
+            elseif. do.
               (bname)=: 2&ic (2-2) + <. a
               (blname)=: nrows$bl=. 4
             end.
           else.
-            if. #b=. I. a e. IntegerNull, NumericNull do.
+            if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+              (bname)=: (2-2) + <. (1.1-1.1) b}a
+              (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+            elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
               (bname)=: (2-2) + <. (2-2) b}a
-              (blname)=: _1 b}nrows$bl=. SZI
-            else.
+              (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+            elseif. do.
               (bname)=: (2-2) + <. a
               (blname)=: nrows$bl=. SZI
             end.
@@ -1903,10 +1928,13 @@ for_i. i.ncol do.
           bytelen=. bytelen, bl
           q=. sh;(>:i);SQL_PARAM_INPUT;((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_C_SLONG, SQL_C_SBIGINT);((IF64*.(SQL_BIGINT=i{ty)*.(0=bugflag (17 b.) BUGFLAG_BINDPARMBIGINT)){SQL_INTEGER, SQL_BIGINT);0;0;(vad bname);bl;(<vad blname)
         else.
-          if. #b=. I. a e. IntegerNull, NumericNull do.
+          if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
             (bname)=: (_&<.) <. (1.1-1.1) b}a
-            (blname)=: _1 b}nrows$bl=. 8
-          else.
+            (blname)=: SQL_NULL_DATA b}nrows$bl=. 8
+          elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
+            (bname)=: (_&<.) <. (2-2) b}a
+            (blname)=: SQL_NULL_DATA b}nrows$bl=. 8
+          elseif. do.
             (bname)=: (_&<.) <. a
             (blname)=: nrows$bl=. 8
           end.
@@ -1914,10 +1942,13 @@ for_i. i.ncol do.
           q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_DOUBLE;SQL_BIGINT;0;0;(vad bname);0;(<vad blname)
         end.
       else.
-        if. #b=. I. a e. IntegerNull, NumericNull do.
+        if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+          (bname)=: (2-2) + <. (1.1-1.1) b}a
+          (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+        elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
           (bname)=: (2-2) + <. (2-2) b}a
-          (blname)=: _1 b}nrows$bl=. SZI
-        else.
+          (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+        elseif. do.
           (bname)=: (2-2) + <. a
           (blname)=: nrows$bl=. SZI
         end.
@@ -1947,20 +1978,26 @@ for_i. i.ncol do.
       r return.
     end.
     if. IF64 do.
-      if. #b=. I. a e. IntegerNull, NumericNull do.
+      if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+        (bname)=: 2&ic (2-2) + <. (1.1-1.1) b}a
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. 4
+      elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
         (bname)=: 2&ic (2-2) + <. (2-2) b}a
-        (blname)=: _1 b}nrows$bl=. 4
-      else.
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. 4
+      elseif. do.
         (bname)=: 2&ic (2-2) + <. a
         (blname)=: nrows$bl=. 4
       end.
       bytelen=. bytelen, bl
       q=. sh;(>:i);SQL_PARAM_INPUT;SQL_C_SLONG;SQL_INTEGER;0;0;(vad bname);0;(<vad blname)
     else.
-      if. #b=. I. a e. IntegerNull, NumericNull do.
+      if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
+        (bname)=: (2-2) + <. (1.1-1.1) b}a
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+      elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
         (bname)=: (2-2) + <. (2-2) b}a
-        (blname)=: _1 b}nrows$bl=. SZI
-      else.
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. SZI
+      elseif. do.
         (bname)=: (2-2) + <. a
         (blname)=: nrows$bl=. SZI
       end.
@@ -1970,10 +2007,13 @@ for_i. i.ncol do.
   case. SQL_DOUBLE;SQL_FLOAT;SQL_REAL;SQL_DECIMAL;SQL_NUMERIC do.
     try.
       a=. , >(of+i){x
-      if. #b=. I. a e. NumericNull do.
+      if. (8=3!:0 a) *. *#b=. I. a e. NumericNull do.
         (bname)=: (_&<.) (1.1-1.1) b}a
-        (blname)=: _1 b}nrows$bl=. 8
-      else.
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. 8
+      elseif. (1 4 e.~ a) *. *#b=. I. a e. IntegerNull do.
+        (bname)=: (_&<.) (2-2) b}a
+        (blname)=: SQL_NULL_DATA b}nrows$bl=. 8
+      elseif. do.
         (bname)=: (_&<.) a
         (blname)=: nrows$bl=. 8
       end.
@@ -2430,8 +2470,8 @@ else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
   GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
 end.
-GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY,  SQL_WLONGVARCHAR
-GCNM=: GCNM ,  ;:' emptyrk1   emptyrk1            emptyrk1'
+GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR
+GCNM=: GCNM , ;:' emptyrk1   emptyrk1            emptyrk1'
 
 assert. (#GDX) = #GCNM
 GGETV=: (sqlnames i."1'=') {."0 1 sqlnames
@@ -2628,7 +2668,7 @@ else.
 end.
 )
 getDateTimeNull=: 3 : 'DateTimeNull'
-getIntegerNull=: 3 : 'IntegerNull'
+getIntegerNull=: 3 : '(IntegerNull=IMIN){::IntegerNull;__'
 getNumericNull=: 3 : 'NumericNull'
 getFraSecond=: 3 : 'FraSecond'
 getOffsetMinute=: 3 : 'OffsetMinute'

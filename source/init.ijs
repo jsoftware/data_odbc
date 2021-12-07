@@ -5,11 +5,13 @@ NB. script_z_ '~system/main/strings.ijs'
 
 coclass 'jdd'
 
+IMAX=: IF64{::2147483647;9223372036854775807
+IMIN=: _1+-IMAX
 DateTimeNull=: _
 InitDone=: 0
-IntegerNull=: __ [ <.-2^<:32*1+IF64  NB. for backward compatible
+IntegerNull=: IMIN       NB. for backward compatible
 NumericNull=: __
-EpochNull=: IF64{:: __ ; _9223372036854775808
+EpochNull=: IF64{:: __ ; IMIN
 FraSecond=: 0            NB. fractional second 0 to 9
 OffsetMinute=: 0         NB. timezone offset ahead of utc in minutes for ddins
 OffsetMinute_bin=: 1&ic 0 0
