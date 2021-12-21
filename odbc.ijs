@@ -773,11 +773,12 @@ lim=. a:{ >{:z
 dat=. ''
 while. lim>:#dat do.
   if. sqlbad rc=. >{. z do. SQL_ERROR;'';0 return. end.
+  if. SQL_NULL_DATA=src rc do. break. end.
   if. SQL_NO_DATA=src rc do. break. end.
   dat=. dat , (LONGBUF<.>{:z) {. , >4{z
   z=. sqlgetdata get
 end.
-if. x do. dat=. 8&u: 4&u: _1&(3!:4) dat end.
+if. x do. dat=. 8&u: 6&u: dat end.
 DD_OK ; dat ; #dat
 )
 getchar=: datchar&.>
@@ -799,7 +800,7 @@ getsmallint=: datsmallint&.>
 gettinyint=: dattinyint&.>
 getlongvarchar=: datlong&.>
 getlongvarbinary=: datlong&.>
-getwlongvarchar=: datlong&.>
+getwlongvarchar=: 1&datlong&.>
 gettype_timestamp=: dattimestamp&.>
 gettype_date=: datdate&.>
 gettype_time=: dattime&.>
@@ -2333,7 +2334,7 @@ SQL_CONCUR_READ_ONLY=: 1
 SQL_PARAM_INPUT=: 1
 SQL_ALL_TYPES=: 0
 COLUMNBUF=: 50000
-LONGBUF=: 500000
+LONGBUF=: 5000000
 SHORTBUF=: 8000
 MAXARRAYSIZE=: 65535
 CNB=: 0{a.

@@ -986,13 +986,14 @@ lim=. a:{ >{:z  NB. last item of first get is data length
 dat=. ''
 while. lim>:#dat do.
   if. sqlbad rc=. >{. z do. SQL_ERROR;'';0 return. end.
+  if. SQL_NULL_DATA=src rc do. break. end.
   if. SQL_NO_DATA=src rc do. break. end.
 
 NB. last item of z contains bytes remaining before last get
   dat=. dat , (LONGBUF<.>{:z) {. , >4{z
   z=. sqlgetdata get
 end.
-if. x do. dat=. 8&u: 4&u: _1&(3!:4) dat end.
+if. x do. dat=. 8&u: 6&u: dat end.
 DD_OK ; dat ; #dat  NB. return code, data, length
 )
 
@@ -1021,7 +1022,7 @@ getsmallint=: datsmallint&.>
 gettinyint=: dattinyint&.>
 getlongvarchar=: datlong&.>
 getlongvarbinary=: datlong&.>
-getwlongvarchar=: datlong&.>
+getwlongvarchar=: 1&datlong&.>
 gettype_timestamp=: dattimestamp&.>
 gettype_date=: datdate&.>
 gettype_time=: dattime&.>

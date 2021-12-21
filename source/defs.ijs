@@ -117,6 +117,6 @@ SQL_ALL_TYPES=: 0
 
 NB. Note: setting good buffer sizes can signficantly improve performance.
 COLUMNBUF=: 50000    NB. default row size of bound column buffers
-LONGBUF=: 500000     NB. default buffer size for long datatypes
+LONGBUF=: 5000000    NB. default buffer size for long datatypes
 SHORTBUF=: 8000      NB. default buffer size for short datatypes
 MAXARRAYSIZE=: 65535
