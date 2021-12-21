@@ -1937,7 +1937,7 @@ if. 'ODBC' -.@-: dddriver'' do. errret ISI14 return. end.
 if. -. isia y=. fat y do. errret ISI08 return. end.
 if. -. isiu x=. ,x do. errret ISI08 return. end.
 if. 2~:#x do. errret ISI08 return. end.
-if. -.y e. CHALL do. errret ISI03 return. end.
+NB. if. -.y e. CHALL do. errret ISI03 return. end.
 ch=. y
 'attr val'=. x
 if. sqlok z=. sqlsetconnectattra ch;attr;val;SQL_IS_UINTEGER do.

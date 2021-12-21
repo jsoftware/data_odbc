@@ -972,7 +972,7 @@ while.do.
     n=. (i_index{cv) `:0 dddata sh,i+1
 
 
-    if. _1 e. len=. dddataln sh,i+1 do.
+    if. SQL_NULL_DATA e. len=. dddataln sh,i+1 do.
       if. # ndx=. I. len = SQL_NULL_DATA do.
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
@@ -1309,7 +1309,6 @@ if. 'ODBC' -.@-: dddriver'' do. errret ISI14 return. end.
 if. -. isia y=. fat y do. errret ISI08 return. end.
 if. -. isiu x=. ,x do. errret ISI08 return. end.
 if. 2~:#x do. errret ISI08 return. end.
-if. -.y e. CHALL do. errret ISI03 return. end.
 ch=. y
 'attr val'=. x
 if. sqlok z=. sqlsetconnectattra ch;attr;val;SQL_IS_UINTEGER do.
