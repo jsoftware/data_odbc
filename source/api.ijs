@@ -36,6 +36,7 @@ sqlgetfunctions=: (libodbc, ' SQLGetFunctions s x s *s') &cd
 sqlgetdata=: (libodbc, ' SQLGetData s x s s * x *x') &cd
 sqlgetdiagrec=: (libodbc, ' SQLGetDiagRec s s x s *c *i *c s *s') &cd
 sqlgetinfo=: (libodbc, ' SQLGetInfo s x s * s *s') &cd
+sqlgetstmtattr=: (libodbc, ' SQLGetStmtAttr s x i *x i *i') &cd
 sqlgettypeinfo=: (libodbc, ' SQLGetTypeInfo s x s') &cd
 sqlnumresultcols=: (libodbc, ' SQLNumResultCols s x *s') &cd
 sqlprepare=: (libodbc, ' SQLPrepare s x *c i') &cd

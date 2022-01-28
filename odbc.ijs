@@ -90,6 +90,7 @@ sqlgetfunctions=: (libodbc, ' SQLGetFunctions s x s *s') &cd
 sqlgetdata=: (libodbc, ' SQLGetData s x s s * x *x') &cd
 sqlgetdiagrec=: (libodbc, ' SQLGetDiagRec s s x s *c *i *c s *s') &cd
 sqlgetinfo=: (libodbc, ' SQLGetInfo s x s * s *s') &cd
+sqlgetstmtattr=: (libodbc, ' SQLGetStmtAttr s x i *x i *i') &cd
 sqlgettypeinfo=: (libodbc, ' SQLGetTypeInfo s x s') &cd
 sqlnumresultcols=: (libodbc, ' SQLNumResultCols s x *s') &cd
 sqlprepare=: (libodbc, ' SQLPrepare s x *c i') &cd
@@ -110,7 +111,10 @@ name=. (":sh),'_',":col
 bname=. 'BIND_',name
 blname=. 'BINDLN_',name
 (blname)=: (rows,1)$2-2
-if. type e. SQL_CHAR,SQL_VARCHAR do.
+if. 0=col do.
+  len=. precision [ tartype=. SQL_C_VARBOOKMARK
+  (bname)=: (rows,len)$' '
+elseif. type e. SQL_CHAR,SQL_VARCHAR do.
   len=. fat >:precision [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_DECIMAL,SQL_NUMERIC do.
@@ -437,7 +441,7 @@ clr 0
 if. -. isia y do. errret ISI08 return. end.
 if. -. y e. CHALL do. errret ISI03 return. end.
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_FORWARD_ONLY ;0 do. errret SQL_HANDLE_STMT,sh return. end.
+if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_FORWARD_ONLY;0 do. errret SQL_HANDLE_STMT,sh return. end.
 if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CONCURRENCY;SQL_CONCUR_READ_ONLY;0 do. errret SQL_HANDLE_STMT,sh return. end.
 z=. sqlgettypeinfo sh;SQL_ALL_TYPES
 if. sqlok z do.
@@ -1016,7 +1020,7 @@ end.
 
 dbind=: 4 : 0
 if. 0&e. b=. (;6{"1 x) e. SQL_COLBIND_TYPES do. errret ISI10 typeerr (-.b)#x return. end.
-dcolbind y
+if. DD_OK-.@-:r=. dcolbind y do. r return. end.
 z=. (6 7{"1 x) bindcol (0{y),.(>: i.#x),.1{y
 if. *./(src ; 0{"1 z) e. DD_SUCCESS do. DD_OK else. errret ISI10 end.
 )
@@ -1184,6 +1188,12 @@ if. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_BIND_TYPE;SQL_BIND_BY_COLUMN;0 do. err
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_ARRAY_SIZE;r;0 do. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(iad bstname);0 do. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROWS_FETCHED_PTR;(iad brfname);0 do. errret et
+end.
+if. sqlbad rc=. sqlgetstmtattr sh;SQL_ATTR_USE_BOOKMARKS;(,_1);SZI;(,_1) do. errret et
+elseif. SQL_UB_VARIABLE = (0< {.>@{:rc){0,3{::rc do.
+  if. sqlbad (SQL_C_VARBOOKMARK;10) bindcol sh,0,r do. errret et
+  elseif.do. DD_OK
+  end.
 elseif.do. DD_OK
 end.
 )
@@ -2284,6 +2294,12 @@ SQL_ROWSET_SIZE=: 9
 SQL_IS_UINTEGER=: _5
 SQL_TRUE=: 1
 SQL_API_SQLBULKOPERATIONS=: 24
+SQL_ATTR_USE_BOOKMARKS=: 12
+SQL_USE_BOOKMARKS=: 12
+SQL_UB_OFF=: 0
+SQL_UB_ON=: 1
+SQL_UB_FIXED=: 1
+SQL_UB_VARIABLE=: 2
 
 SQL_DESC_BASE_COLUMN_NAME=: 22
 SQL_DESC_BASE_TABLE_NAME=: 23
@@ -2308,6 +2324,7 @@ SQL_TYPE_TIME=: 92
 SQL_TYPE_TIMESTAMP=: 93
 SQL_C_BIGINT=: _5
 SQL_C_SBIGINT=: (SQL_C_BIGINT+SQL_SIGNED_OFFSET)
+SQL_C_VARBOOKMARK=: SQL_C_BINARY
 
 SQL_DATE_LEN=: 10
 SQL_TIME_LEN=: 8
@@ -2325,16 +2342,24 @@ SQL_C_SS_TIME2=: SQL_C_TYPES_EXTENDED
 SQL_C_SS_TIMESTAMPOFFSET=: SQL_C_TYPES_EXTENDED+1
 
 SQL_ADD=: 4
+SQL_UPDATE_BY_BOOKMARK=: 5
+SQL_DELETE_BY_BOOKMARK=: 6
+SQL_FETCH_BY_BOOKMARK=: 7
 SQL_ATTR_CURSOR_TYPE=: 6
 SQL_CURSOR_FORWARD_ONLY=: 0
+SQL_CURSOR_KEYSET_DRIVEN=: 1
 SQL_CURSOR_DYNAMIC=: 2
 SQL_ATTR_CONCURRENCY=: 7
 SQL_CONCUR_LOCK=: 2
 SQL_CONCUR_READ_ONLY=: 1
 SQL_PARAM_INPUT=: 1
 SQL_ALL_TYPES=: 0
-COLUMNBUF=: 50000
-LONGBUF=: 5000000
+SQL_ASYNC_ENABLE=: 4
+SQL_ATTR_ASYNC_ENABLE=: 4
+SQL_ASYNC_ENABLE_OFF=: 0
+SQL_ASYNC_ENABLE_ON=: 1
+COLUMNBUF=: 20000
+LONGBUF=: 1000000
 SHORTBUF=: 8000
 MAXARRAYSIZE=: 65535
 CNB=: 0{a.
