@@ -16,7 +16,7 @@ NB. of (SQL_SUPPORTED_NAMES).
 NB.
 NB. dyad:  blDll =. btGetcolinfo bindcol it
 
-'sh col rows'=. y
+'sh col rows longb'=. 4{.y,0
 'type precision'=. x
 type=. fat src type
 
@@ -93,8 +93,13 @@ elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR do.
-  len=. 0 [ tartype=. SQL_C_BINARY
-  (bname)=: (rows,len)$''
+  if. (0<longb) *. (1=rows) do.
+    len=. >: longb [ tartype=. SQL_C_BINARY
+    (bname)=: (rows,len)$' '
+  else.
+    len=. 0 [ tartype=. SQL_C_BINARY
+    (bname)=: (rows,len)$''
+  end.
 elseif.do. SQL_ERROR return.
 end.
 
@@ -407,9 +412,9 @@ n=. EH;SQL_FETCH_NEXT
 r=. i.0 0
 while.do.
   z=. sqldrivers d , 6$(256#' ');256;,0
-  if. sqlbad z do. errret '' return. end.
+  if. sqlbad z do. errret SQL_HANDLE_ENV,EH return. end.
   if. SQL_NO_DATA=rc=. src >0{z do. break. end.
-  if. -. sqlok rc do. errret '' return. end.
+  if. -. sqlok rc do. errret SQL_HANDLE_ENV,EH return. end.
   d=. n
   r=. r , 3 6{z
 end.
@@ -438,13 +443,13 @@ NB.                  i   i    *c     i   *i    *c       i  *i
   z=. sqldatasources d ,(l#' ');256;(,0);(256#' ');256;,0
 
 NB. return if errors
-  if. sqlbad z do. errret '' return. end.
+  if. sqlbad z do. errret SQL_HANDLE_ENV,EH return. end.
 
 NB. end loop if no more data sources
   if. SQL_NO_DATA=rc=. src >0{z do. break. end.
 
 NB. insure no unexepected codes - infinite loop risk otherwise
-  if. -. sqlok rc do. errret '' return. end.
+  if. -. sqlok rc do. errret SQL_HANDLE_ENV,EH return. end.
   d=. n
   r=. r , 3 6{z
 
@@ -474,7 +479,7 @@ if. -. isia y do. errret ISI08 return. end.
 if. -. y e. CHALL do. errret ISI03 return. end.
 
 NB. get statement handle - return if errors
-if. SQL_ERROR=sh=. getstmt y do. errret '' return. end.
+if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
 
 NB. <0 is the C NULL pointer in the following call
 NB.            i   *c   i   *c   i   *c   i   *c  i
@@ -583,7 +588,7 @@ if. -. w e. CHALL do. errret ISI03 return. end.
 x=. ,x
 
 NB. get statement handle - return if errors
-if. SQL_ERROR=sh=. getstmt w do. errret '' return. end.
+if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
 
 NB.             i   *c   i   *c   i  *c   i     *c   i
 z=. sqlcolumns sh;(<0);256;(<0);256;x;SQL_NTS;(<0);256
@@ -1079,7 +1084,8 @@ NB. columns in a result set.
 NB.
 NB. monad:  bt =. getallcolinfo iaSh
 
-if. sqlbad z=. sqlnumresultcols y;,0 do.
+z=. sqlnumresultcols y;,0
+if. sqlbad z do.
   SQL_ERROR
 else.
   z=. getcolinfo y,.1+i.>2{z
@@ -1147,7 +1153,7 @@ NB. TODO: if present, connection timeout=  must be the last option
     ct=. '{}' -.~ ct {.~ <./ ct i. ';}'
     if. (4=3!:0 ct) *. _1~:ct=. {.!._1 <. _1&". ct do.
       if. sqlbad sqlsetconnectattr HDBC;SQL_ATTR_CONNECTION_TIMEOUT;ct;SQL_IS_UINTEGER do.
-        er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return.
+        SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret SQL_HANDLE_DBC,HDBC return.
       end.
     end.
     y=. ({.I.a){.y
@@ -1155,7 +1161,7 @@ NB. TODO: if present, connection timeout=  must be the last option
 
   outstr=. 1024$' '
   z=. sqldriverconnect LASTCONNECT=: HDBC;0;(bs y),(bs outstr),(,0);SQL_DRIVER_NOPROMPT
-  if. sqlbad z do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return. end.
+  if. sqlbad z do. SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret SQL_HANDLE_DBC,HDBC return. end.
   odsn=. ({.7{::z) {. 5{::z
 end.
 
@@ -1163,10 +1169,10 @@ NB. absence of SQL errors is not sufficient to insure a valid connection
 NB. must check the last error and look at the SQLSTATE.  ODBC documentation
 NB. advises programmers to avoid logic based on SQLSTATE's.  In this
 NB. case I ignore general warnings '01000' and return an error for all others
-if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret '' return.
+if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret '' return.
 elseif. #em do.
   if. 0&e. ({."1 em) e. <SQLST_WARNING do.
-    er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret fmterr {.em return.
+    SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret fmterr {.em return.
   end.
 end.
 
@@ -1195,7 +1201,7 @@ ch=. w NB. save in case dll call modifies value
 
 NB. attempt to disconnect
 if. sqlbad sqldisconnect w do. errret SQL_HANDLE_DBC,ch return. end.
-if. sqlbad sqlfreehandle SQL_HANDLE_DBC;y do. errret '' return. end.
+if. sqlbad sqlfreehandle SQL_HANDLE_DBC;y do. errret SQL_HANDLE_DBC,y return. end.
 
 NB. remove handles from globals
 CHALL=: CHALL-.ch
@@ -1235,6 +1241,7 @@ else.
   r [ freestmt sh
 end.
 )
+
 
 NB. =========================================================
 transact=: 4 : 0
@@ -1354,16 +1361,20 @@ if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
 r=. (r<0){r,_1  NB. tolerate negs other than _1
 
 NB. column information needed to bind & convert
-if. SQL_ERROR-:ci=. getallcolinfo sh do. errret '' return. end.
+if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh return. end.
 assert. 10={:@$ ci
 
+longb=. (x<0){0,-x       NB. special handling for 1 row only
 NB. bind columns for _1 case use (x) buffer size
-buf=. (_1=r){r,x
-if. sqlbad z=. ci dbind sh,buf do. SQL_ERROR return. end.
+buf=. (_1=r){r,(x<0){x,COLUMNBUF
+if. sqlbad z=. ci dbind sh,buf,longb do. SQL_ERROR return. end.
 
+ty=. >6 {"1 ci
 NB. type conversion gerund
 cv=. GCNM {~ GDX i. ; 6 {"1 ci
-ty=. >6 {"1 ci
+if. (0<longb) *. (1=buf) do.
+  cv=. (<,']') (I. ty e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR)} cv
+end.
 
 one=. 0<r
 dat=. (#ci)#<0 0$0   NB. boolean is the lowest datatype, coerce empty arrays ...
@@ -1382,9 +1393,11 @@ NB. collect & convert data
   z=. ''
   for_i. i.#ci do.
     n=. (i_index{cv) `:0 dddata sh,i+1
-
-
-    if. SQL_NULL_DATA e. len=. dddataln sh,i+1 do.
+    len=. dddataln sh,i+1
+    if. (1=#len) *. (SQL_NULL_DATA -.@e. len) *. (0<longb) *. (i{ty) e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR do.
+      n=. ,:({.len){.{.n
+    end.
+    if. SQL_NULL_DATA e. len do.
       if. # ndx=. I. len = SQL_NULL_DATA do.
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
@@ -1431,8 +1444,8 @@ if. -.(isia x) *. isiu y do. errret ISI08 return. end.
 if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
 
 NB. bind columns
-if. SQL_ERROR-:ci=. getallcolinfo sh do. errret ''
-elseif. sqlbad ci dbind sh,r do. SQL_ERROR
+if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh
+elseif. sqlbad ci dbind sh,x,0 do. SQL_ERROR
 elseif.do. DD_OK [ ('BINDTI_',":sh)=: ci  NB. save column info with bind nouns
 end.
 )
@@ -1448,13 +1461,14 @@ NB.
 NB.   ci =. getallcolinfo sh
 NB.   ci dbind sh,100  NB. fetch 100 rows
 
+y=. 3{.y,0
 
 NB. test statement column types for bind'abilty
 if. 0&e. b=. (;6{"1 x) e. SQL_COLBIND_TYPES do. errret ISI10 typeerr (-.b)#x return. end.
 
 NB. set up and attempt to bind
-if. DD_OK-.@-:r=. dcolbind y do. r return. end.
-z=. (6 7{"1 x) bindcol (0{y),.(>: i.#x),.1{y
+if. DD_OK-.@-:r=. dcolbind 2{.y do. r return. end.
+z=. (6 7{"1 x) bindcol (2{y),.~(0{y),.(>: i.#x),.(1{y)
 NB. did all columns bind?
 if. *./(src ; 0{"1 z) e. DD_SUCCESS do. DD_OK else. errret ISI10 end.
 )
@@ -1832,7 +1846,7 @@ if. -. sh e.1{"1 CSPALL do. errret ISI04 return. end.
 mod=. _2=r      NB. only get longvalues
 r=. (r<0){r,_1  NB. tolerate negs other than _1
 if. SQL_ERROR-:ci=. getallcolinfo sh do.
-  errret ''
+  errret SQL_HANDLE_STMT,sh
 else.
   z=. ,&.> ci getdata sh,mod{r,_2
   assert. 1= #@$&> ,z
@@ -1986,6 +2000,7 @@ z
 )
 
 NB. =========================================================
+NB. for ddfet
 getdata=: 4 : 0
 
 NB. (getdata) is the main sqlgetdata driver.
@@ -2020,7 +2035,8 @@ cc=. <"1 sh,.>:i.#ty
 dat=. (0,#ty)$<''
 if. r=0 do. dat return. end.
 
-z=. sqlfetch sh
+NB. z=. sqlfetch sh
+z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
 while.do.
 
   if. sqlbad rc=. >{.z do.
@@ -2038,7 +2054,8 @@ NB. apply gerund to fetch & convert all columns
   dat=. dat , 1 {&> row
 
   if. 0=r=. <:r do. break. end.  NB. _1 case ends on SQL_NO_DATA
-  z=. sqlfetch sh
+NB.  z=. sqlfetch sh
+  z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
 end.
 dat
 )

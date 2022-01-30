@@ -81,7 +81,7 @@ sqlcolattribute=: (libodbc, ' SQLColAttribute s x s s *c s *s *') &cd
 sqlgetconnectattra=: (libodbc, ' SQLGetConnectAttr s x i * i *i') &cd
 sqlsetconnectattra=: (libodbc, ' SQLSetConnectAttr s x i x i') &cd
 bindcol=: 4 : 0"1 1
-'sh col rows'=. y
+'sh col rows longb'=. 4{.y,0
 'type precision'=. x
 type=. fat src type
 
@@ -155,8 +155,13 @@ elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_LONGVARCHAR,SQL_LONGVARBINARY,SQL_WLONGVARCHAR do.
-  len=. 0 [ tartype=. SQL_C_BINARY
-  (bname)=: (rows,len)$''
+  if. (0<longb) *. (1=rows) do.
+    len=. >: longb [ tartype=. SQL_C_BINARY
+    (bname)=: (rows,len)$' '
+  else.
+    len=. 0 [ tartype=. SQL_C_BINARY
+    (bname)=: (rows,len)$''
+  end.
 elseif.do. SQL_ERROR return.
 end.
 
@@ -367,9 +372,9 @@ n=. EH;SQL_FETCH_NEXT
 r=. i.0 0
 while.do.
   z=. sqldrivers d , 6$(256#' ');256;,0
-  if. sqlbad z do. errret '' return. end.
+  if. sqlbad z do. errret SQL_HANDLE_ENV,EH return. end.
   if. SQL_NO_DATA=rc=. src >0{z do. break. end.
-  if. -. sqlok rc do. errret '' return. end.
+  if. -. sqlok rc do. errret SQL_HANDLE_ENV,EH return. end.
   d=. n
   r=. r , 3 6{z
 end.
@@ -384,9 +389,9 @@ r=. i.0 0
 
 while.do.
   z=. sqldatasources d ,(l#' ');256;(,0);(256#' ');256;,0
-  if. sqlbad z do. errret '' return. end.
+  if. sqlbad z do. errret SQL_HANDLE_ENV,EH return. end.
   if. SQL_NO_DATA=rc=. src >0{z do. break. end.
-  if. -. sqlok rc do. errret '' return. end.
+  if. -. sqlok rc do. errret SQL_HANDLE_ENV,EH return. end.
   d=. n
   r=. r , 3 6{z
 
@@ -398,7 +403,7 @@ ddtbl=: 3 : 0
 clr 0
 if. -. isia y do. errret ISI08 return. end.
 if. -. y e. CHALL do. errret ISI03 return. end.
-if. SQL_ERROR=sh=. getstmt y do. errret '' return. end.
+if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
 z=. sqltables sh;(<0);256;(<0);256;(<0);256;(<0);256
 if. sqlok z do.
   CSPALL=: CSPALL,y,sh
@@ -455,7 +460,7 @@ w=. y
 if. -. (iscl x) *. isia w=. fat w do. errret ISI08 return. end.
 if. -. w e. CHALL do. errret ISI03 return. end.
 x=. ,x
-if. SQL_ERROR=sh=. getstmt w do. errret '' return. end.
+if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
 z=. sqlcolumns sh;(<0);256;(<0);256;x;SQL_NTS;(<0);256
 if. sqlbad z do.
   r=. errret SQL_HANDLE_STMT,sh
@@ -804,7 +809,8 @@ z=. sqldescribecol arg
 z=. (<(fat 5{::z){.3{::z) 3}z
 )
 getallcolinfo=: 3 : 0
-if. sqlbad z=. sqlnumresultcols y;,0 do.
+z=. sqlnumresultcols y;,0
+if. sqlbad z do.
   SQL_ERROR
 else.
   z=. getcolinfo y,.1+i.>2{z
@@ -847,7 +853,7 @@ else.
     ct=. '{}' -.~ ct {.~ <./ ct i. ';}'
     if. (4=3!:0 ct) *. _1~:ct=. {.!._1 <. _1&". ct do.
       if. sqlbad sqlsetconnectattr HDBC;SQL_ATTR_CONNECTION_TIMEOUT;ct;SQL_IS_UINTEGER do.
-        er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return.
+        SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret SQL_HANDLE_DBC,HDBC return.
       end.
     end.
     y=. ({.I.a){.y
@@ -855,13 +861,13 @@ else.
 
   outstr=. 1024$' '
   z=. sqldriverconnect LASTCONNECT=: HDBC;0;(bs y),(bs outstr),(,0);SQL_DRIVER_NOPROMPT
-  if. sqlbad z do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return. end.
+  if. sqlbad z do. SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret SQL_HANDLE_DBC,HDBC return. end.
   odsn=. ({.7{::z) {. 5{::z
 end.
-if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret '' return.
+if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret '' return.
 elseif. #em do.
   if. 0&e. ({."1 em) e. <SQLST_WARNING do.
-    er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret fmterr {.em return.
+    SQL_ERROR [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ errret fmterr {.em return.
   end.
 end.
 
@@ -878,7 +884,7 @@ if. -. w e. CHALL do. errret ISI03 return. end.
 if. #shs=. 1{"1 CSPALL#~w=0{"1 CSPALL do. ddend shs end.
 ch=. w
 if. sqlbad sqldisconnect w do. errret SQL_HANDLE_DBC,ch return. end.
-if. sqlbad sqlfreehandle SQL_HANDLE_DBC;y do. errret '' return. end.
+if. sqlbad sqlfreehandle SQL_HANDLE_DBC;y do. errret SQL_HANDLE_DBC,y return. end.
 CHALL=: CHALL-.ch
 CSPALL=: CSPALL#~ch~:0{"1 CSPALL
 DBMSALL=: DBMSALL#~ch~:>0{("1) DBMSALL
@@ -898,6 +904,7 @@ else.
   r [ freestmt sh
 end.
 )
+
 transact=: 4 : 0
 if. sqlok sqlendtran SQL_HANDLE_DBC;y;x do.
   DD_OK [ CHTR=: CHTR-.y
@@ -945,12 +952,18 @@ if. -.(isia x) *. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,1
 if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
 r=. (r<0){r,_1
-if. SQL_ERROR-:ci=. getallcolinfo sh do. errret '' return. end.
+if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh return. end.
 assert. 10={:@$ ci
-buf=. (_1=r){r,x
-if. sqlbad z=. ci dbind sh,buf do. SQL_ERROR return. end.
-cv=. GCNM {~ GDX i. ; 6 {"1 ci
+
+longb=. (x<0){0,-x
+buf=. (_1=r){r,(x<0){x,COLUMNBUF
+if. sqlbad z=. ci dbind sh,buf,longb do. SQL_ERROR return. end.
+
 ty=. >6 {"1 ci
+cv=. GCNM {~ GDX i. ; 6 {"1 ci
+if. (0<longb) *. (1=buf) do.
+  cv=. (<,']') (I. ty e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR)} cv
+end.
 
 one=. 0<r
 dat=. (#ci)#<0 0$0
@@ -965,9 +978,11 @@ while.do.
   z=. ''
   for_i. i.#ci do.
     n=. (i_index{cv) `:0 dddata sh,i+1
-
-
-    if. SQL_NULL_DATA e. len=. dddataln sh,i+1 do.
+    len=. dddataln sh,i+1
+    if. (1=#len) *. (SQL_NULL_DATA -.@e. len) *. (0<longb) *. (i{ty) e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR do.
+      n=. ,:({.len){.{.n
+    end.
+    if. SQL_NULL_DATA e. len do.
       if. # ndx=. I. len = SQL_NULL_DATA do.
         if. 2 = 3!:0 n do.
           n=. (' '#~{:$n) ndx } n
@@ -1002,16 +1017,17 @@ clr 0
 if. -.(isia x) *. isiu y do. errret ISI08 return. end.
 'sh r'=. 2{.,y,x
 if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
-if. SQL_ERROR-:ci=. getallcolinfo sh do. errret ''
-elseif. sqlbad ci dbind sh,r do. SQL_ERROR
+if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh
+elseif. sqlbad ci dbind sh,x,0 do. SQL_ERROR
 elseif.do. DD_OK [ ('BINDTI_',":sh)=: ci
 end.
 )
 
 dbind=: 4 : 0
+y=. 3{.y,0
 if. 0&e. b=. (;6{"1 x) e. SQL_COLBIND_TYPES do. errret ISI10 typeerr (-.b)#x return. end.
-if. DD_OK-.@-:r=. dcolbind y do. r return. end.
-z=. (6 7{"1 x) bindcol (0{y),.(>: i.#x),.1{y
+if. DD_OK-.@-:r=. dcolbind 2{.y do. r return. end.
+z=. (6 7{"1 x) bindcol (2{y),.~(0{y),.(>: i.#x),.(1{y)
 if. *./(src ; 0{"1 z) e. DD_SUCCESS do. DD_OK else. errret ISI10 end.
 )
 
@@ -1208,7 +1224,7 @@ if. -. sh e.1{"1 CSPALL do. errret ISI04 return. end.
 mod=. _2=r
 r=. (r<0){r,_1
 if. SQL_ERROR-:ci=. getallcolinfo sh do.
-  errret ''
+  errret SQL_HANDLE_STMT,sh
 else.
   z=. ,&.> ci getdata sh,mod{r,_2
   assert. 1= #@$&> ,z
@@ -1348,8 +1364,7 @@ cc=. <"1 sh,.>:i.#ty
 
 dat=. (0,#ty)$<''
 if. r=0 do. dat return. end.
-
-z=. sqlfetch sh
+z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
 while.do.
 
   if. sqlbad rc=. >{.z do.
@@ -1365,7 +1380,7 @@ while.do.
   dat=. dat , 1 {&> row
 
   if. 0=r=. <:r do. break. end.
-  z=. sqlfetch sh
+  z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
 end.
 dat
 )
@@ -2293,7 +2308,11 @@ SQL_ATTR_AUTOCOMMIT=: 102
 SQL_AUTOCOMMIT_OFF=: 0
 SQL_AUTOCOMMIT_ON=: 1
 SQL_ROWSET_SIZE=: 9
+SQL_IS_POINTER=: _4
 SQL_IS_UINTEGER=: _5
+SQL_IS_INTEGER=: _6
+SQL_IS_USMALLINT=: _7
+SQL_IS_SMALLINT=: _8
 SQL_TRUE=: 1
 SQL_API_SQLBULKOPERATIONS=: 24
 SQL_ATTR_CONNECTION_TIMEOUT=: 113
@@ -2735,8 +2754,8 @@ wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
 wrds=. wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
-wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
 if. -.setz do. wrds=. '' end.
+wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
 wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
