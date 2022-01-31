@@ -862,16 +862,26 @@ else.
   if. sqlbad z do. errret SQL_HANDLE_ENV,EH return. end.
 
   HDBC=: fat >3{z
+  if. 1 e. a=. 'connection timeout=' E. tolower y do.
+    ct=. ((#'connection timeout=')+{.I.a)}.y
+    ct=. '{}' -.~ ct {.~ <./ ct i. ';}'
+    if. (4=3!:0 ct) *. _1~:ct=. {.!._1 <. _1&". ct do.
+      if. sqlbad sqlsetconnectattr HDBC;SQL_ATTR_CONNECTION_TIMEOUT;ct;SQL_IS_UINTEGER do.
+        er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return.
+      end.
+    end.
+    y=. ({.I.a){.y
+  end.
 
   outstr=. 1024$' '
   z=. sqldriverconnect LASTCONNECT=: HDBC;0;(bs y),(bs outstr),(,0);SQL_DRIVER_NOPROMPT
-  if. sqlbad z do. errret SQL_HANDLE_DBC,HDBC return. end.
+  if. sqlbad z do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return. end.
   odsn=. ({.7{::z) {. 5{::z
 end.
-if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. errret '' return.
+if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret '' return.
 elseif. #em do.
   if. 0&e. ({."1 em) e. <SQLST_WARNING do.
-    errret fmterr {.em return.
+    er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret fmterr {.em return.
   end.
 end.
 
@@ -2294,6 +2304,7 @@ SQL_ROWSET_SIZE=: 9
 SQL_IS_UINTEGER=: _5
 SQL_TRUE=: 1
 SQL_API_SQLBULKOPERATIONS=: 24
+SQL_ATTR_CONNECTION_TIMEOUT=: 113
 SQL_ATTR_USE_BOOKMARKS=: 12
 SQL_USE_BOOKMARKS=: 12
 SQL_UB_OFF=: 0

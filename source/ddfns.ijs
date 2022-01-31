@@ -1139,9 +1139,21 @@ NB. ddcon 'Driver={Microsoft Access Driver (*.mdb)};Dbq=C:\Northwind.mdb;Uid=Adm
 
   HDBC=: fat >3{z
 
+NB. TODO: if present, connection timeout=  must be the last option
+  if. 1 e. a=. 'connection timeout=' E. tolower y do.
+    ct=. ((#'connection timeout=')+{.I.a)}.y
+    ct=. '{}' -.~ ct {.~ <./ ct i. ';}'
+    if. (4=3!:0 ct) *. _1~:ct=. {.!._1 <. _1&". ct do.
+      if. sqlbad sqlsetconnectattr HDBC;SQL_ATTR_CONNECTION_TIMEOUT;ct;SQL_IS_UINTEGER do.
+        er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return.
+      end.
+    end.
+    y=. ({.I.a){.y
+  end.
+
   outstr=. 1024$' '
   z=. sqldriverconnect LASTCONNECT=: HDBC;0;(bs y),(bs outstr),(,0);SQL_DRIVER_NOPROMPT
-  if. sqlbad z do. errret SQL_HANDLE_DBC,HDBC return. end.
+  if. sqlbad z do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret SQL_HANDLE_DBC,HDBC return. end.
   odsn=. ({.7{::z) {. 5{::z
 end.
 
@@ -1149,10 +1161,10 @@ NB. absence of SQL errors is not sufficient to insure a valid connection
 NB. must check the last error and look at the SQLSTATE.  ODBC documentation
 NB. advises programmers to avoid logic based on SQLSTATE's.  In this
 NB. case I ignore general warnings '01000' and return an error for all others
-if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. errret '' return.
+if. SQL_ERROR-:em=. SQL_HANDLE_DBC getlasterror HDBC do. er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret '' return.
 elseif. #em do.
   if. 0&e. ({."1 em) e. <SQLST_WARNING do.
-    errret fmterr {.em return.
+    er [ sqlfreehandle SQL_HANDLE_DBC;HDBC [ er=. errret fmterr {.em return.
   end.
 end.
 
