@@ -87,8 +87,8 @@ NB. GDX=: GDX, SQL_REAL, SQL_WCHAR, SQL_WVARCHAR, SQL_UNIQUEID
 NB. GCNM=: GCNM,;:'ffs       trctnb     trctnb        trctguid      ]'
 
 NB. (ddfch) type conversion gerund and type index - char_trctnb on unlisted types
-GDX=: SQL_VARCHAR, SQL_CHAR
-GCNM=: ;:'          trctnb       trctnb'
+GDX=: SQL_VARCHAR, SQL_CHAR, SQL_VARBINARY, SQL_BINARY
+GCNM=: ;:'trctnb       trctnb trctnb       trctnb '
 if. 1=UseDayNo do.
   GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2, SQL_SS_TIMESTAMPOFFSET
   GCNM=: GCNM,;:'fmtdts_num       fmtddts_num    fmttdts_num    fmttdts2_num  fmtdtsx_num'

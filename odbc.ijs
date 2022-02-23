@@ -1613,14 +1613,14 @@ if. #ty do.
         (bname)=: 0~: brow&{ >(of+i){x
         (blname)=: nrows$1
         q=. sh;(>:i);SQL_C_BIT;(vad bname);1;(<vad blname)
-      case. SQL_CHAR;SQL_VARCHAR;SQL_WCHAR;SQL_WVARCHAR do.
+      case. SQL_CHAR;SQL_VARCHAR;SQL_WCHAR;SQL_WVARCHAR;SQL_BINARY;SQL_VARBINARY do.
         if. 2 -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
           r return.
         end.
         (bname)=: ,a=. ln&{."1 brow&{ >(of+i){x
-        if. UseTrimBulkText do.
+        if. UseTrimBulkText > (i{ty) e. SQL_BINARY,SQL_VARBINARY do.
           (blname)=: 1 >. #@dtb"1 a
         else.
           (blname)=: nrows$#{.a
@@ -2478,8 +2478,8 @@ SQL_UNIQUEID=:_11['*'
 settypeinfo=: 3 : 0
 sqlnames=. }. SQL_SUPPORTED_NAMES
 SQL_SUPPORTED_TYPES=: , ". sqlnames
-GDX=: SQL_VARCHAR, SQL_CHAR
-GCNM=: ;:'          trctnb       trctnb'
+GDX=: SQL_VARCHAR, SQL_CHAR, SQL_VARBINARY, SQL_BINARY
+GCNM=: ;:'trctnb       trctnb trctnb       trctnb '
 if. 1=UseDayNo do.
   GDX=: GDX, SQL_TYPE_TIMESTAMP, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_SS_TIME2, SQL_SS_TIMESTAMPOFFSET
   GCNM=: GCNM,;:'fmtdts_num       fmtddts_num    fmttdts_num    fmttdts2_num  fmtdtsx_num'

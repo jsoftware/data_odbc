@@ -245,14 +245,14 @@ if. #ty do.
         (bname)=: 0~: brow&{ >(of+i){x
         (blname)=: nrows$1
         q=. sh;(>:i);SQL_C_BIT;(vad bname);1;(<vad blname)
-      case. SQL_CHAR;SQL_VARCHAR;SQL_WCHAR;SQL_WVARCHAR do.
+      case. SQL_CHAR;SQL_VARCHAR;SQL_WCHAR;SQL_WVARCHAR;SQL_BINARY;SQL_VARBINARY do.
         if. 2 -.@e.~ 3!:0 >(of+i){x do.
           erasebind sh [ freestmt sh [ r=. errret ISI51
           if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
           r return.
         end.
         (bname)=: ,a=. ln&{."1 brow&{ >(of+i){x
-        if. UseTrimBulkText do.  NB. test feature: trim literal data
+        if. UseTrimBulkText > (i{ty) e. SQL_BINARY,SQL_VARBINARY do.  NB. test feature: trim literal data
           (blname)=: 1 >. #@dtb"1 a
         else.
           (blname)=: nrows$#{.a
