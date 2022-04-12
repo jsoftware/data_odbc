@@ -34,21 +34,15 @@ SQL_WVARCHAR_z_=: _9
 SQL_WLONGVARCHAR_z_=: _10
 SQL_UNIQUEID_z_=: _11
 
-settypeinfo 0
 
 3 : 0''
 wchar2char=: 1 + IFWIN > 1252= (('kernel32 GetACP > i'&cd) :: 0:) ''
-setz=. 1
-if. 0=4!:0<'ODBCSETZLOCALE' do.
-  if. 0=ODBCSETZLOCALE do. setz=. 0 end.
-end.
-
-if. setz *. *#libodbc do.
 NB. initialize ODBC environment - any extant environment is ended
-  endodbcenv 0
-  setzlocale 0
-  InitDone_jdd_=: 1
-  initodbcenv 0
-end.
+endodbcenv 0
+InitDone=: 1
+settypeinfo 0
+initodbcenv 0
+setzlocale 0
+
 EMPTY
 )

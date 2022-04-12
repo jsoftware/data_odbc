@@ -14,6 +14,7 @@ UseBigInt=: 0
 UseDayNo=: 0
 UseNumeric=: 0
 UseTrimBulkText=: 1
+EH=: _1
 
 dayns=: 86400000000000
 EpochOffset=: 73048
@@ -24,9 +25,7 @@ SZI=: IF64{4 8
 SFX=: >IF64{'32';'64'
 
 create=: 3 : 0
-if. 0=InitDone do.
-  InitDone_jdd_=: 1
-end.
+InitDone=: 1
 settypeinfo 0
 initodbcenv 0
 ''
@@ -35,27 +34,6 @@ initodbcenv 0
 destroy=: 3 : 0
 endodbcenv 0
 codestroy''
-)
-setzlocale=: 3 : 0
-wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
-wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
-wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
-wrds=. wrds ,' dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
-wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
-wrds=. > ;: wrds
-
-cl=. '_jdd_'
-". (wrds ,"1 '_z_ =: ',"1 wrds ,"1 cl) -."1 ' '
-
-if. 0=InitDone_jdd_ do.
-  InitDone_jdd_=: 1
-end.
-settypeinfo 0
-endodbcenv 0
-initodbcenv 0
-
-EMPTY
 )
 3 : 0''
 if. 0~: 4!:0<'PREFER_IODBC' do.
@@ -352,6 +330,7 @@ ALLDM=: i. 0 0
 )
 ddconfig=: 3 : 0
 clr 0
+rc=. 0
 key=. {.keynvalue=. |: _2]\ y
 value=. {:keynvalue
 for_i. i.#key do.
@@ -370,11 +349,12 @@ for_i. i.#key do.
   case. 'integernull' do. IntegerNull=: (IntegerNull=__){::IntegerNull;IMIN [ IntegerNull=: <. {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
-  case. do. _1 return.
+  case. do. rc=. SQL_ERROR
   end.
 end.
 settypeinfo 0
-0
+if. sqlbad rc do. errret ISI08 return. end.
+rc
 )
 dddriver=: 3 : 0
 clr 0
@@ -1070,18 +1050,22 @@ LERR=: ''
 ALLDM=: i. 0 3
 BADTYPES=: i. 0 0
 DDROWCNT=: 0
+HDBC=: _1
 
+if. 0=#libodbc do. dderr (sminfo]]) errret ISI11 return. end.
 if. 2 0-.@-:(libodbc ,' dummy > n')&cd ::cder'' do. (sminfo]]) dderr errret ISI11 return. end.
-z=. sqlallochandle SQL_HANDLE_ENV;0;,0
-EH=: fat >3{z
-if. sqlbad z do.
+if. _1=EH do.
+  z=. sqlallochandle SQL_HANDLE_ENV;0;,0
+  if. sqlbad z do.
 
-  (sminfo]]) dderr errret ISI11
-  return.
-end.
-if. sqlbad sqlsetenvattr EH;SQL_ATTR_ODBC_VERSION;SQL_OV_ODBC3;0 do.
-  (sminfo]]) dderr errret ISI12
-  return.
+    (sminfo]]) dderr errret ISI11
+    return.
+  end.
+  EH_jdd_=: fat >3{z
+  if. sqlbad sqlsetenvattr EH;SQL_ATTR_ODBC_VERSION;SQL_OV_ODBC3;0 do.
+    (sminfo]]) dderr errret ISI12
+    return.
+  end.
 end.
 6!:3[0
 
@@ -1101,12 +1085,20 @@ end.
 )
 
 endodbcenv=: 3 : 0
-set=. 0&= @: (4!:0)
-if. set <'CHTR' do. if. #CHTR do. ddrbk CHTR end. end.
-if. set <'CSPALL' do. if. #CSPALL do. ddend {:"1 CSPALL end. end.
-if. set <'CHALL' do. if. #CHALL do. dddis CHALL end. end.
-if. set <'EH' do. freeenv EH end.
-erase ;:'CSPALL CHALL EH'
+if. *#libodbc do.
+  set=. 0&= @: (4!:0)
+  if. set <'CHTR' do. if. #CHTR do. ddrbk CHTR end. end.
+  if. set <'CSPALL' do. if. #CSPALL do. ddend {:"1 CSPALL end. end.
+  if. set <'CHALL' do. if. #CHALL do. dddis CHALL end. end.
+end.
+CHTR=: CHALL=: i.0
+CSPALL=: 0 2$0
+DBMSALL=: 0 12$<''
+LERR=: ''
+ALLDM=: i. 0 3
+BADTYPES=: i. 0 0
+DDROWCNT=: 0
+HDBC=: _1
 )
 
 ddcnm=: 3 : 0
@@ -2714,6 +2706,10 @@ getUseUnicode=: 3 : 'UseUnicode'
 getCHALL=: 3 : 'CHALL'
 setzface=: 3 : 0
 r=. i. 0 0
+setz=. 1
+if. 0=4!:0<'ODBCSETZLOCALE' do.
+  if. 0=ODBCSETZLOCALE do. setz=. 0 end.
+end.
 if. (<'base') -: cl=. 18!:5 '' do. r
 else.
   cl=. '_' , (,>cl) , '_'
@@ -2722,6 +2718,7 @@ else.
   wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
   wrds=. wrds ,' ddttrn ddprep ddparm ddsparm ddput ddgetinfo ddcolinfo'
   wrds=. wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
+  if. -.setz do. wrds=. '' end.
   wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
   wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
   ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
@@ -2729,12 +2726,17 @@ else.
 end.
 )
 setzlocale=: 3 : 0
+setz=. 1
+if. 0=4!:0<'ODBCSETZLOCALE' do.
+  if. 0=ODBCSETZLOCALE do. setz=. 0  end.
+end.
 cl=. '_jdd_'
 wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
 wrds=. wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
+if. -.setz do. wrds=. '' end.
 wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
@@ -2769,20 +2771,14 @@ SQL_WVARCHAR_z_=: _9
 SQL_WLONGVARCHAR_z_=: _10
 SQL_UNIQUEID_z_=: _11
 
-settypeinfo 0
 
 3 : 0''
 wchar2char=: 1 + IFWIN > 1252= (('kernel32 GetACP > i'&cd) :: 0:) ''
-setz=. 1
-if. 0=4!:0<'ODBCSETZLOCALE' do.
-  if. 0=ODBCSETZLOCALE do. setz=. 0 end.
-end.
+endodbcenv 0
+InitDone=: 1
+settypeinfo 0
+initodbcenv 0
+setzlocale 0
 
-if. setz *. *#libodbc do.
-  endodbcenv 0
-  setzlocale 0
-  InitDone_jdd_=: 1
-  initodbcenv 0
-end.
 EMPTY
 )

@@ -352,6 +352,7 @@ NB. monad: ddconfig key;value {;key;value...}
 NB.
 ddconfig=: 3 : 0  NB.-->
 clr 0
+rc=. 0
 key=. {.keynvalue=. |: _2]\ y
 value=. {:keynvalue
 for_i. i.#key do.
@@ -372,11 +373,12 @@ NB.   case. 'errret' do. UseErrRet=: -. 0-: {.i{::value
   case. 'numericnull' do. NumericNull=: <. {.i{::value
   case. 'trimbulktext' do. UseTrimBulkText=: -. 0-: {.i{::value
 NB.   case. 'unicode' do. UseUnicode=: -. 0-: {.i{::value
-  case. do. _1 return.
+  case. do. rc=. SQL_ERROR
   end.
 end.
 settypeinfo 0
-0
+if. sqlbad rc do. errret ISI08 return. end.
+rc
 )
 
 NB. =========================================================
@@ -1544,25 +1546,29 @@ LERR=: ''           NB. last error message
 ALLDM=: i. 0 3      NB. all last diagnostic messages
 BADTYPES=: i. 0 0   NB. table of unbindable/ungetable columns
 DDROWCNT=: 0        NB. number of rows affected by last (ddsql) command
+HDBC=: _1           NB. connection handle
 
+if. 0=#libodbc do. dderr (sminfo]]) errret ISI11 return. end.
 if. 2 0-.@-:(libodbc ,' dummy > n')&cd ::cder'' do. (sminfo]]) dderr errret ISI11 return. end.
 NB. PROBLEM QUESTION? the first item of z is not 0 or 1 (SQL_SUCCESS_CODES)
 NB. It's not sqlbad either -  the EH handle returned in the third
 NB. item does work
 
 NB. get an environment handle (EH)
-z=. sqlallochandle SQL_HANDLE_ENV;0;,0
-EH=: fat >3{z
-if. sqlbad z do.
+if. _1=EH do.
+  z=. sqlallochandle SQL_HANDLE_ENV;0;,0
+  if. sqlbad z do.
 
-  (sminfo]]) dderr errret ISI11
-  return.
-end.
+    (sminfo]]) dderr errret ISI11
+    return.
+  end.
+  EH_jdd_=: fat >3{z
 
 NB. set environment attributes and ODBC version 3.0
-if. sqlbad sqlsetenvattr EH;SQL_ATTR_ODBC_VERSION;SQL_OV_ODBC3;0 do.
-  (sminfo]]) dderr errret ISI12
-  return.
+  if. sqlbad sqlsetenvattr EH;SQL_ATTR_ODBC_VERSION;SQL_OV_ODBC3;0 do.
+    (sminfo]]) dderr errret ISI12
+    return.
+  end.
 end.
 
 NB. following added to ensure correct initialization
@@ -1602,12 +1608,21 @@ NB.  environment would automatically clean up.
 NB.
 NB.  monad:  iaRc =. endodbcenv uuIgnore
 
-set=. 0&= @: (4!:0)
-if. set <'CHTR' do. if. #CHTR do. ddrbk CHTR end. end.
-if. set <'CSPALL' do. if. #CSPALL do. ddend {:"1 CSPALL end. end.
-if. set <'CHALL' do. if. #CHALL do. dddis CHALL end. end.
-if. set <'EH' do. freeenv EH end.  NB. NIMP check errors?
-erase ;:'CSPALL CHALL EH'
+if. *#libodbc do.
+  set=. 0&= @: (4!:0)
+  if. set <'CHTR' do. if. #CHTR do. ddrbk CHTR end. end.
+  if. set <'CSPALL' do. if. #CSPALL do. ddend {:"1 CSPALL end. end.
+  if. set <'CHALL' do. if. #CHALL do. dddis CHALL end. end.
+NB. if. set <'EH' do. freeenv EH end.  NB. NIMP check errors?
+end.
+CHTR=: CHALL=: i.0  NB. all connection handles (pending transactions)
+CSPALL=: 0 2$0      NB. all statement handles (connection,statement pairs)
+DBMSALL=: 0 12$<''  NB. properties of connection handles
+LERR=: ''           NB. last error message
+ALLDM=: i. 0 3      NB. all last diagnostic messages
+BADTYPES=: i. 0 0   NB. table of unbindable/ungetable columns
+DDROWCNT=: 0        NB. number of rows affected by last (ddsql) command
+HDBC=: _1           NB. connection handle
 )
 
 
