@@ -1234,7 +1234,12 @@ x=. ,x
 
 NB. attempt to execute and return statement handle
 if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
-if. sqlok sqlexecdirect sh;bs x do.
+if. *./128>a.i.x do.
+  rc=. sqlexecdirect sh;bs x
+else.
+  rc=. sqlexecdirectW sh;bs (7&u:x)
+end.
+if. sqlok rc do.
   sh [ CSPALL=: CSPALL,w,sh
 else.
   r=. errret SQL_HANDLE_STMT,sh
@@ -1271,7 +1276,12 @@ x=. ,x
 
 NB. attempt to get stmt handle and execute
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-if. sqlok sqlexecdirect sh;bs x do.
+if. *./128>a.i.x do.
+  rc=. sqlexecdirect sh;bs x
+else.
+  rc=. sqlexecdirectW sh;bs (7&u:x)
+end.
+if. sqlok rc do.
 
 NB. set number of rows affected for (ddcnt)
   if. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.

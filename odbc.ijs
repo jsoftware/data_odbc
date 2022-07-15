@@ -60,6 +60,7 @@ sqldriverconnect=: (libodbc, ' SQLDriverConnect s x x *c s *c s *s s') &cd
 sqldrivers=: (libodbc, ' SQLDrivers s x s *c s *s *c s *s') &cd
 sqlendtran=: (libodbc, ' SQLEndTran s s x s') &cd
 sqlexecdirect=: (libodbc, ' SQLExecDirect s x *c i') &cd
+sqlexecdirectW=: (libodbc, ' SQLExecDirectW s x *w i') &cd
 sqlexecute=: (libodbc, ' SQLExecute s x') &cd
 sqlfetch=: (libodbc, ' SQLFetch s x') &cd
 sqlfetchscroll=: (libodbc, ' SQLFetchScroll s x s x') &cd
@@ -897,7 +898,12 @@ if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
 if. -.w e. CHALL do. errret ISI03 return. end.
 x=. ,x
 if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
-if. sqlok sqlexecdirect sh;bs x do.
+if. *./128>a.i.x do.
+  rc=. sqlexecdirect sh;bs x
+else.
+  rc=. sqlexecdirectW sh;bs (7&u:x)
+end.
+if. sqlok rc do.
   sh [ CSPALL=: CSPALL,w,sh
 else.
   r=. errret SQL_HANDLE_STMT,sh
@@ -919,7 +925,12 @@ if. -.(isia y) *. iscl x do. errret ISI08 return. end.
 if. -.y e.CHALL do. errret ISI03 return. end.
 x=. ,x
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-if. sqlok sqlexecdirect sh;bs x do.
+if. *./128>a.i.x do.
+  rc=. sqlexecdirect sh;bs x
+else.
+  rc=. sqlexecdirectW sh;bs (7&u:x)
+end.
+if. sqlok rc do.
   if. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
   if. -. y e. CHTR do. SQL_COMMIT transact y end.
   DD_OK [ freestmt sh
@@ -1473,7 +1484,11 @@ if. -. DD_OK= >@{.rc do.
   r return.
 end.
 
-z=. sqlexecdirect sh;bs sql
+if. *./128>a.i.sql do.
+  z=. sqlexecdirect sh;bs sql
+else.
+  z=. sqlexecdirectW sh;bs (7&u:sql)
+end.
 
 if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
@@ -1826,7 +1841,11 @@ clr 0
 if. -.y e.CHALL do. errret ISI03 return. end.
 if. -. iscl sql=. x do. errret ISI08 return. end.
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-z=. sqlexecdirect sh;bs sql
+if. *./128>a.i.sql do.
+  z=. sqlexecdirect sh;bs sql
+else.
+  z=. sqlexecdirectW sh;bs (7&u:sql)
+end.
 if. sqlbad z do.
   r=. errret SQL_HANDLE_STMT,sh
   r [ freestmt sh return.

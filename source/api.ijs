@@ -28,6 +28,7 @@ sqldriverconnect=: (libodbc, ' SQLDriverConnect s x x *c s *c s *s s') &cd
 sqldrivers=: (libodbc, ' SQLDrivers s x s *c s *s *c s *s') &cd
 sqlendtran=: (libodbc, ' SQLEndTran s s x s') &cd
 sqlexecdirect=: (libodbc, ' SQLExecDirect s x *c i') &cd
+sqlexecdirectW=: (libodbc, ' SQLExecDirectW s x *w i') &cd
 sqlexecute=: (libodbc, ' SQLExecute s x') &cd
 sqlfetch=: (libodbc, ' SQLFetch s x') &cd
 sqlfetchscroll=: (libodbc, ' SQLFetchScroll s x s x') &cd

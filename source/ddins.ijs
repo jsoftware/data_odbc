@@ -98,7 +98,11 @@ if. -. DD_OK= >@{.rc do.
   r return.
 end.
 
-z=. sqlexecdirect sh;bs sql
+if. *./128>a.i.sql do.
+  z=. sqlexecdirect sh;bs sql
+else.
+  z=. sqlexecdirectW sh;bs (7&u:sql)
+end.
 
 if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
@@ -475,7 +479,11 @@ clr 0
 if. -.y e.CHALL do. errret ISI03 return. end.
 if. -. iscl sql=. x do. errret ISI08 return. end.
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-z=. sqlexecdirect sh;bs sql
+if. *./128>a.i.sql do.
+  z=. sqlexecdirect sh;bs sql
+else.
+  z=. sqlexecdirectW sh;bs (7&u:sql)
+end.
 if. sqlbad z do.
   r=. errret SQL_HANDLE_STMT,sh
   r [ freestmt sh return.
