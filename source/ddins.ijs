@@ -896,7 +896,12 @@ NB. SQLSVR need specific precision for date time fields
     r return.
   end.
 end.
-if. sqlbad z=. sqlprepare sh; bs sql do.
+if. *./128>a.i.sql do.
+  z=. sqlprepare sh;bs sql
+else.
+  z=. sqlprepareW sh;bs (7&u:sql)
+end.
+if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
   r return.

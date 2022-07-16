@@ -41,6 +41,7 @@ sqlgetstmtattr=: (libodbc, ' SQLGetStmtAttr s x i *x i *i') &cd
 sqlgettypeinfo=: (libodbc, ' SQLGetTypeInfo s x s') &cd
 sqlnumresultcols=: (libodbc, ' SQLNumResultCols s x *s') &cd
 sqlprepare=: (libodbc, ' SQLPrepare s x *c i') &cd
+sqlprepareW=: (libodbc, ' SQLPrepareW s x *w i') &cd
 sqlrowcount=: (libodbc, ' SQLRowCount s x *x') &cd
 sqlsetconnectattr=: (libodbc, ' SQLSetConnectAttr s x i x i') &cd
 sqlsetenvattr=: (libodbc, ' SQLSetEnvAttr s x i x i') &cd

@@ -73,6 +73,7 @@ sqlgetstmtattr=: (libodbc, ' SQLGetStmtAttr s x i *x i *i') &cd
 sqlgettypeinfo=: (libodbc, ' SQLGetTypeInfo s x s') &cd
 sqlnumresultcols=: (libodbc, ' SQLNumResultCols s x *s') &cd
 sqlprepare=: (libodbc, ' SQLPrepare s x *c i') &cd
+sqlprepareW=: (libodbc, ' SQLPrepareW s x *w i') &cd
 sqlrowcount=: (libodbc, ' SQLRowCount s x *x') &cd
 sqlsetconnectattr=: (libodbc, ' SQLSetConnectAttr s x i x i') &cd
 sqlsetenvattr=: (libodbc, ' SQLSetEnvAttr s x i x i') &cd
@@ -2237,7 +2238,12 @@ for_i. i.ncol do.
     r return.
   end.
 end.
-if. sqlbad z=. sqlprepare sh; bs sql do.
+if. *./128>a.i.sql do.
+  z=. sqlprepare sh;bs sql
+else.
+  z=. sqlprepareW sh;bs (7&u:sql)
+end.
+if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
   r return.
