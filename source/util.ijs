@@ -19,6 +19,7 @@ NB. tests of sql dll returns - small ints forced to standard form
 src=: _1: ic 1: ic ]
 sqlbad=: 13 : '(src >{. y) e. DD_ERROR'
 sqlok=: 13 : '(src >{. y) e. DD_SUCCESS'
+sqlok1=: 13 : '(src >{. y) e. DD_SUCCESS1'
 sqlsuccess=: 13 : '(src >{. y) e. SQL_SUCCESS'
 
 NB. returns 1 if argument is a character list or atom 0 otherwise

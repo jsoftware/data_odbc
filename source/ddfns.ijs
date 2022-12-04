@@ -1239,7 +1239,7 @@ if. *./128>a.i.x do.
 else.
   rc=. sqlexecdirectW sh;bs (7&u:x)
 end.
-if. sqlok rc do.
+if. sqlok1 rc do.
   sh [ CSPALL=: CSPALL,w,sh
 else.
   r=. errret SQL_HANDLE_STMT,sh
@@ -1281,10 +1281,11 @@ if. *./128>a.i.x do.
 else.
   rc=. sqlexecdirectW sh;bs (7&u:x)
 end.
-if. sqlok rc do.
+if. sqlok1 rc do.
 
 NB. set number of rows affected for (ddcnt)
-  if. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
+  if. (SQL_NO_DATA=src>@{.rc) do. DDROWCNT=: 0
+  elseif. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
 
 NB. if connection is not on pending transactions commit
   if. -. y e. CHTR do. SQL_COMMIT transact y end.
@@ -1502,7 +1503,7 @@ NB. monad:  ddfetch iaSh
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
 if. -.w e.1{"1 CSPALL do. errret ISI04 return. end.
-if. sqlok sqlfetchscroll w;SQL_FETCH_NEXT;0 do. DD_OK else. errret SQL_HANDLE_STMT,y end.
+if. sqlok1 sqlfetchscroll w;SQL_FETCH_NEXT;0 do. DD_OK else. errret SQL_HANDLE_STMT,y end.
 )
 
 

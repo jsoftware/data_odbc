@@ -904,7 +904,7 @@ if. *./128>a.i.x do.
 else.
   rc=. sqlexecdirectW sh;bs (7&u:x)
 end.
-if. sqlok rc do.
+if. sqlok1 rc do.
   sh [ CSPALL=: CSPALL,w,sh
 else.
   r=. errret SQL_HANDLE_STMT,sh
@@ -931,8 +931,9 @@ if. *./128>a.i.x do.
 else.
   rc=. sqlexecdirectW sh;bs (7&u:x)
 end.
-if. sqlok rc do.
-  if. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
+if. sqlok1 rc do.
+  if. (SQL_NO_DATA=src>@{.rc) do. DDROWCNT=: 0
+  elseif. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
   if. -. y e. CHTR do. SQL_COMMIT transact y end.
   DD_OK [ freestmt sh
 else.
@@ -1047,7 +1048,7 @@ ddfetch=: 3 : 0
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
 if. -.w e.1{"1 CSPALL do. errret ISI04 return. end.
-if. sqlok sqlfetchscroll w;SQL_FETCH_NEXT;0 do. DD_OK else. errret SQL_HANDLE_STMT,y end.
+if. sqlok1 sqlfetchscroll w;SQL_FETCH_NEXT;0 do. DD_OK else. errret SQL_HANDLE_STMT,y end.
 )
 
 typeerr=: 4 : 0
@@ -2578,6 +2579,7 @@ fat=: ''&$@:,
 src=: _1: ic 1: ic ]
 sqlbad=: 13 : '(src >{. y) e. DD_ERROR'
 sqlok=: 13 : '(src >{. y) e. DD_SUCCESS'
+sqlok1=: 13 : '(src >{. y) e. DD_SUCCESS1'
 sqlsuccess=: 13 : '(src >{. y) e. SQL_SUCCESS'
 iscl=: e.&(2 131072 262144)@(3!:0) *. 1: >: [: # $
 isua=: 0: = [: # $
