@@ -7,6 +7,8 @@ coclass 'jdd'
 
 IMAX=: IF64{::2147483647;9223372036854775807
 IMIN=: _1+-IMAX
+AutoAsync=: 0            NB. automatically use async
+AutoDend=: 1             NB. automatically ddend after ddfch ddfet
 DateTimeNull=: _
 InitDone=: 0
 IntegerNull=: IMIN       NB. for backward compatible

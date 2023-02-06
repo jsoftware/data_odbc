@@ -362,6 +362,8 @@ key=. {.keynvalue=. |: _2]\ y
 value=. {:keynvalue
 for_i. i.#key do.
   select. tolower i{::key
+  case. 'autoasync' do. AutoAsync=: -. 0-: {.i{::value
+  case. 'autodend' do. AutoDend=: -. 0-: {.i{::value
   case. 'bigint' do. UseBigInt=: -. 0-: {.i{::value
   case. 'datetimenull' do. DateTimeNull=: <. {.i{::value
   case. 'frasecond' do. FraSecond=: 9 <. 0 >. <. {.i{::value
@@ -480,10 +482,16 @@ if. -. y e. CHALL do. errret ISI03 return. end.
 
 NB. get statement handle - return if errors
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
+if. AutoAsync do.
+  rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+  if. sqlbad rc1 do. echo 'ddtbl fallback to sync' end.
+end.
 
 NB. <0 is the C NULL pointer in the following call
 NB.            i   *c   i   *c   i   *c   i   *c  i
-z=. sqltables sh;(<0);256;(<0);256;(<0);256;(<0);256
+z=. sqltables pa=. sh;(<0);256;(<0);256;(<0);256;(<0);256
+while. sqlstillexec z do. z=. sqltables pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
 
 NB. update connection/statement pairs & return statement handle
@@ -528,7 +536,14 @@ if. -. y e. CHALL do. errret ISI03 return. end.
 if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
 if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_FORWARD_ONLY;0 do. errret SQL_HANDLE_STMT,sh return. end.
 if. sqlbad sqlsetstmtattr sh;SQL_ATTR_CONCURRENCY;SQL_CONCUR_READ_ONLY;0 do. errret SQL_HANDLE_STMT,sh return. end.
-z=. sqlgettypeinfo sh;SQL_ALL_TYPES
+if. AutoAsync do.
+  rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+  if. sqlbad rc1 do. echo 'ddtypeinfo fallback to sync' end.
+end.
+
+z=. sqlgettypeinfo pa=. sh;SQL_ALL_TYPES
+while. sqlstillexec z do. z=. sqlgettypeinfo pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   CSPALL=: CSPALL,y,sh
   sh
@@ -589,9 +604,15 @@ x=. ,x
 
 NB. get statement handle - return if errors
 if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
+if. AutoAsync do.
+  rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+  if. sqlbad rc1 do. echo 'ddcol fallback to sync' end.
+end.
 
 NB.             i   *c   i   *c   i  *c   i     *c   i
-z=. sqlcolumns sh;(<0);256;(<0);256;x;SQL_NTS;(<0);256
+z=. sqlcolumns pa=. sh;(<0);256;(<0);256;x;SQL_NTS;(<0);256
+while. sqlstillexec z do. z=. sqlcolumns pa [ usleep ASYNCDELAY end.
 if. sqlbad z do.
   r=. errret SQL_HANDLE_STMT,sh
   r [ freestmt sh return.
@@ -657,6 +678,7 @@ NB. (freestmt) frees allocated statement handles.
 NB.
 NB. monad:  freestmt iaSh
 
+sqlcancel y
 sqlfreehandle SQL_HANDLE_STMT;y
 )
 
@@ -681,7 +703,9 @@ gc=: 0 4 6&{  NB. necessary columns in get result
 
 NB. =========================================================
 tdatchar=: 3 : 0"1
-sqlgetdata (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
+z=. sqlgetdata pa=. (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
+while. sqlstillexec z do. z=. sqlgetdata pa [ usleep ASYNCDELAY end.
+z
 )
 
 
@@ -691,7 +715,8 @@ trimdat=: 13 : '(<(0>.>2{y){.>1{y) 1} y'   NB. coerce _1=len (NULL) to empty str
 
 NB. =========================================================
 datchar=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_CHAR;(SHORTBUF$' ');(>:SHORTBUF);,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do. trimdat z else. z end.
 )
 
@@ -701,14 +726,16 @@ NB. coercing to atom is more trouble than it's worth
 NB. =========================================================
 datwchar=: 3 : 0"1
 bufln=. >:buf=. wchar2char * SHORTBUF
-z=. gc sqlgetdata (b0 y),SQL_C_CHAR;(buf$' ');bufln;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_CHAR;(buf$' ');bufln;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 z=. (<8&u: 6&u: 1:{z) 1} z
 if. sqlok z do. trimdat z else. z end.
 )
 
 NB. =========================================================
 datdouble=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -720,7 +747,8 @@ end.
 
 NB. =========================================================
 datinteger32=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(,2-2);4;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SLONG;(,2-2);4;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -732,7 +760,8 @@ end.
 
 NB. =========================================================
 datinteger64=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SLONG;(4${.a.);4;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SLONG;(4${.a.);4;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -748,7 +777,8 @@ datinteger=: ('datinteger',SFX)~ f.
 
 NB. =========================================================
 datbigint32=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -760,7 +790,8 @@ end.
 
 NB. =========================================================
 datbigint64=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SBIGINT;(,2-2);8;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SBIGINT;(,2-2);8;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -774,7 +805,8 @@ datbigint=: ('datbigint',(IF64*.UseBigInt){::'32';SFX)~ f.
 
 NB. =========================================================
 datsmallint=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SSHORT;(2${.a.);2;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SSHORT;(2${.a.);2;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -788,7 +820,8 @@ end.
 
 NB. =========================================================
 dattinyint=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_TINYINT;(1${.a.);1;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_TINYINT;(1${.a.);1;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<IntegerNull) 1} z
@@ -802,7 +835,8 @@ end.
 
 NB. =========================================================
 datbit=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_BIT;(1${.a.);1;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_BIT;(1${.a.);1;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<0) 1} z
@@ -816,7 +850,8 @@ end.
 
 NB. =========================================================
 datreal=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_BINARY;(4${.a.);4;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_BINARY;(4${.a.);4;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. SQL_NULL_DATA= _1{::z do.
     (<NumericNull) 1} z
@@ -830,7 +865,8 @@ end.
 
 NB. =========================================================
 dattimestamp=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_TYPE_TIMESTAMP;(16$CNB);17;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_TYPE_TIMESTAMP;(16$CNB);17;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
@@ -858,7 +894,8 @@ end.
 
 NB. =========================================================
 datsstimestampoffset=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SS_TIMESTAMPOFFSET;(20$CNB);21;,0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SS_TIMESTAMPOFFSET;(20$CNB);21;,0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
@@ -886,7 +923,8 @@ end.
 
 NB. =========================================================
 datdate=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_TYPE_DATE;(6$CNB);7;,-0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_TYPE_DATE;(6$CNB);7;,-0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
@@ -914,7 +952,8 @@ end.
 
 NB. =========================================================
 dattime=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_TYPE_TIME;(6$CNB);7;,-0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_TYPE_TIME;(6$CNB);7;,-0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
@@ -942,7 +981,8 @@ end.
 
 NB. =========================================================
 datsstime2=: 3 : 0"1
-z=. gc sqlgetdata (b0 y),SQL_C_SS_TIME2;(12$CNB);13;,-0
+z=. gc sqlgetdata pa=. (b0 y),SQL_C_SS_TIME2;(12$CNB);13;,-0
+while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 if. sqlok z do.
   if. 1=UseDayNo do.
     if. SQL_NULL_DATA= _1{::z do. NB. SQL_NULL_DATA
@@ -992,16 +1032,22 @@ NB. get=. sc,SQL_CHAR;(LONGBUF$' ');(>:LONGBUF);,0
 get=. sc,SQL_C_BINARY;(LONGBUF$' ');LONGBUF;,0
 
 z=. sqlgetdata get
+while. sqlstillexec z do. z=. sqlgetdata get [ usleep ASYNCDELAY end.
 lim=. a:{ >{:z  NB. last item of first get is data length
 dat=. ''
 while. lim>:#dat do.
-  if. sqlbad rc=. >{. z do. SQL_ERROR;'';0 return. end.
-  if. SQL_NULL_DATA=src rc do. break. end.
-  if. SQL_NO_DATA=src rc do. break. end.
+  if. sqlbad rc=. >{. z do. SQL_ERROR;'';0 return.
+  elseif. sqlstillexec z do. z=. sqlgetdata get [ usleep ASYNCDELAY continue.
+  elseif. SQL_NULL_DATA=src rc do. break.
+  elseif. SQL_NO_DATA=src rc do. break.
+  elseif. sqlok rc do.
 
 NB. last item of z contains bytes remaining before last get
-  dat=. dat , (LONGBUF<.>{:z) {. , >4{z
-  z=. sqlgetdata get
+    dat=. dat , (LONGBUF<.>{:z) {. , >4{z
+    z=. sqlgetdata get
+  elseif.do.
+    z return.
+  end.
 end.
 if. x do. dat=. 8&u: 6&u: dat end.
 DD_OK ; dat ; #dat  NB. return code, data, length
@@ -1071,8 +1117,8 @@ NB.       SQLSMALLINT *  DecimalDigitsPtr,
 NB.       SQLSMALLINT *  NullablePtr);
 
 getcolinfo=: 3 : 0"1
-arg=. (b0 y),(bs 128$' '),5#<,0
-z=. sqldescribecol arg
+z=. sqldescribecol pa=. (b0 y),(bs 128$' '),5#<,0
+while. sqlstillexec z do. z=. sqldescribecol pa [ usleep ASYNCDELAY end.
 z=. (<(fat 5{::z){.3{::z) 3}z
 )
 
@@ -1084,7 +1130,8 @@ NB. columns in a result set.
 NB.
 NB. monad:  bt =. getallcolinfo iaSh
 
-z=. sqlnumresultcols y;,0
+z=. sqlnumresultcols pa=. y;,0
+while. sqlstillexec z do. z=. sqlnumresultcols pa [ usleep ASYNCDELAY end.
 if. sqlbad z do.
   SQL_ERROR
 else.
@@ -1211,7 +1258,7 @@ DD_OK
 )
 
 
-NB. =========================================================
+NB. ====#====================================================
 ddsel=: 4 : 0  NB.-->
 
 NB. (ddsel) selects data. (y) argument is a connection handle and
@@ -1226,25 +1273,109 @@ NB.   NB. take simple arguments and return result sets
 NB.   NB. driver must support escape {}'s and stored procs
 NB.   '{call procname(''chararg'')}' ddsel ch
 
+NB. (x) is a boxed array each SQL statement in box will be executed asynchronusly
+NB. (y) is array of connection handles
+
+NB. The following statement functions operate on a data source and can execute asynchronously:
+NB.
+NB. SQLBulkOperations
+NB. SQLColAttribute
+NB. SQLColumnPrivileges
+NB. SQLColumns
+NB. SQLDescribeCol
+NB. SQLDescribeParam
+NB. SQLExecDirect
+NB. SQLExecute
+NB. SQLFetch
+NB.
+NB. SQLFetchScroll
+NB. SQLForeignKeys
+NB. SQLGetData
+NB. SQLGetTypeInfo
+NB. SQLMoreResults
+NB. SQLNumParams
+NB. SQLNumResultCols
+NB. SQLParamData
+NB. SQLPrepare
+NB.
+NB. SQLPrimaryKeys
+NB. SQLProcedureColumns
+NB. SQLProcedures
+NB. SQLPutData
+NB. SQLSetPos
+NB. SQLSpecialColumns
+NB. SQLStatistics
+NB. SQLTablePrivileges
+NB. SQLTables
+
 NB. test arguments
 clr 0
-if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
-if. -.w e. CHALL do. errret ISI03 return. end.
-x=. ,x
+if. 32=3!:0 x do.
+  if. -. (0 4 e.~ 3!:0 w0=. ,y) *. *./ iscl&> x do. errret ISI08 return. end.
+  if. 1=#w0 do. w0=. ({.w0)#~#x end.
+  if. w0 ~:&# x do. errret ISI08 return. end.
+  x0=. x
+  sync=. 0
+else.
+  if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
+  if. -.w e. CHALL do. errret ISI03 return. end.
+  w0=. ,w
+  x0=. <x
+  sync=. 1
+end.
+erase 'x';'y'
 
+if. 0 e. w0 e. CHALL do. errret ISI03 return. end.
+CSPALL0=. 0 0$0
+sh0=. _1#~#x0
+pending=. 0 5$0
+for_x1. x0 do.
+  x=. ,>x1
 NB. attempt to execute and return statement handle
-if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w return. end.
-if. *./128>a.i.x do.
-  rc=. sqlexecdirect sh;bs x
-else.
-  rc=. sqlexecdirectW sh;bs (7&u:x)
+  w=. x1_index{w0
+  if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w [ freestmt"0^:(*@#) sh0-._1 return. end.
+  if. AutoAsync +. -.sync do.
+    rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+    if. 0 [ sqlbad rc1 do. errret SQL_HANDLE_STMT,sh [ freestmt"0^:(*@#) sh0-._1 [ sqlcancel"0^:(*@#) sh0-._1 return. end.
+    if. sqlbad rc1 do. echo 'ddsel fallback to sync' end.
+  end.
+  p=. sh;bs 7&u:^:unipa x [ unipa=. -. *./128>a.i. x
+  rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+  if. sqlok1 rc do.
+    sh0=. sh x1_index}sh0 [ CSPALL0=. CSPALL0,w,sh
+  elseif. sqlstillexec rc do. pending=. pending, x1_index;unipa;p
+  elseif.do.
+    r=. errret SQL_HANDLE_STMT,sh
+    r [ freestmt"0^:(*@#) sh,sh0-._1 [ sqlcancel"0^:(*@#) sh,sh0-._1 return.
+  end.
 end.
-if. sqlok1 rc do.
-  sh [ CSPALL=: CSPALL,w,sh
-else.
-  r=. errret SQL_HANDLE_STMT,sh
-  r [ freestmt sh
+while. *@#pending do.
+
+  fini=. 0 5$0
+  for_p1. pending do.
+    p=. 2}.p1 [ 'x1_index unipa'=. 2{.p1
+    rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+    sh=. >{.p [ w=. x1_index{w0
+    if. sqlok1 rc do.
+      fini=. fini, p1
+      sh0=. sh x1_index}sh0 [ CSPALL0=. CSPALL0,w,sh
+    elseif. sqlbad rc do.
+      r=. errret SQL_HANDLE_STMT,sh
+      r [ freestmt"0^:(*@#) sh0-._1 [ sqlcancel"0^:(*@#) sh0-._1 return.
+    elseif. sqlstillexec rc do.
+    elseif.do.
+      echo 'unhandled error code: ',":>{.rc
+      r=. errret ISI14
+      r [ freestmt"0^:(*@#) sh0-._1 [ sqlcancel"0^:(*@#) sh0-._1 return.
+    end.
+  end.
+  pending=. pending -. fini
+  if. (*@#pending) do. usleep ASYNCDELAYLONG end.
+
 end.
+CSPALL=: CSPALL, CSPALL0
+{.^:sync sh0
 )
 
 
@@ -1268,32 +1399,87 @@ NB. dyad:  iaCh =. clSql ddsql iaCh
 NB.
 NB.   'delete from tdata' ddsel ch
 
+NB. (x) is a boxed array each SQL statement in box will be executed asynchronusly
+NB. (y) is array of connection handles
+
 NB. test arguments
 clr DDROWCNT=: 0
-if. -.(isia y) *. iscl x do. errret ISI08 return. end.
-if. -.y e.CHALL do. errret ISI03 return. end.
-x=. ,x
-
-NB. attempt to get stmt handle and execute
-if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-if. *./128>a.i.x do.
-  rc=. sqlexecdirect sh;bs x
+if. 32=3!:0 x do.
+  if. -. (0 4 e.~ 3!:0 w0=. ,y) *. *./ iscl&> x do. errret ISI08 return. end.
+  if. 1=#w0 do. w0=. ({.w0)#~#x end.
+  if. w0 ~:&# x do. errret ISI08 return. end.
+  x0=. x
+  sync=. 0
 else.
-  rc=. sqlexecdirectW sh;bs (7&u:x)
+  if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
+  if. -.w e. CHALL do. errret ISI03 return. end.
+  w0=. ,w
+  x0=. <x
+  sync=. 1
 end.
-if. sqlok1 rc do.
+erase 'x';'y'
 
+if. 0 e. w0 e. CHALL do. errret ISI03 return. end.
+sh0=. 0$0
+DDROWCNT=: _1#~#x0
+pending=. 0 5$0
+for_x1. x0 do.
+  x=. ,>x1
+NB. attempt to get stmt handle and execute
+  w=. x1_index{w0
+  if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return. end.
+  if. AutoAsync +. -.sync do.
+    rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+    if. 0 [ sqlbad rc1 do. errret SQL_HANDLE_STMT,sh [ freestmt"0^:(*@#) sh0 return. end.
+    if. sqlbad rc1 do. echo 'ddsql fallback to sync' end.
+  end.
+  p=. sh;bs 7&u:^:unipa x [ unipa=. -. *./128>a.i. x
+  rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+  if. sqlok1 rc do.
+    sh0=. sh0,sh
 NB. set number of rows affected for (ddcnt)
-  if. (SQL_NO_DATA=src>@{.rc) do. DDROWCNT=: 0
-  elseif. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: fat >{:z end.
+    if. (SQL_NO_DATA=src>@{.rc) do. DDROWCNT=: 0
+    elseif. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: (fat >{:z) x1_index} DDROWCNT end.
+  elseif. sqlstillexec rc do. pending=. pending, x1_index;unipa;p
+  elseif.do.
+    r=. errret SQL_HANDLE_STMT,sh   NB. unknown error
+    r [ freestmt"0^:(*@#) sh,sh0 [ sqlcancel"0^:(*@#) sh,sh0 return.
+  end.
+end.
+while. #pending do.
+
+  fini=. 0 5$0
+  for_p1. pending do.
+    p=. 2}.p1 [ 'x1_index unipa'=. 2{.p1
+    rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+    sh=. >@{.p [ w=. x1_index{w0
+    if. sqlok1 rc do.
+NB. set number of rows affected for (ddcnt)
+      if. (SQL_NO_DATA=src>@{.rc) do. DDROWCNT=: 0
+      elseif. sqlok z=. sqlrowcount sh;,256 do. DDROWCNT=: (fat >{:z) x1_index} DDROWCNT end.
+      fini=. fini, p1
+    elseif. sqlbad rc do.
+      r=. errret SQL_HANDLE_STMT,sh
+      r [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return.
+    elseif. sqlstillexec rc do.
+    elseif.do.
+      echo 'unhandled error code: ',":>{.rc
+      r=. errret ISI14
+      r [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return.
+    end.
+  end.
+  pending=. pending -. fini
+  if. (*@#pending) do. usleep ASYNCDELAYLONG end.
+
+end.
 
 NB. if connection is not on pending transactions commit
-  if. -. y e. CHTR do. SQL_COMMIT transact y end.
-  DD_OK [ freestmt sh
-else.
-  r=. errret SQL_HANDLE_STMT,sh
-  r [ freestmt sh
+for_w. ~.w0 do.
+  if. -. w e. CHTR do. SQL_COMMIT transact w end.
 end.
+DDROWCNT=: {.^:sync DDROWCNT
+DD_OK [ freestmt"0^:(*@#) sh0
 )
 
 
@@ -1323,6 +1509,7 @@ if. -.w e.1{"1 CSPALL do. errret ISI04 return. end.
 sh=. w
 
 NB. free and clean up regardless of sql errors
+sqlcancel w
 z=. sqlfreehandle SQL_HANDLE_STMT;w
 CSPALL=: CSPALL#~sh~:1{"1 CSPALL
 erasebind sh
@@ -1330,6 +1517,7 @@ erasebind sh
 NB. now check for errors
 if. sqlbad z do. errret SQL_HANDLE_STMT,sh else. DD_OK end.
 )
+
 
 NB. =========================================================
 NB. ddfch
@@ -1366,74 +1554,108 @@ ddfch=: 3 : 0
 COLUMNBUF ddfch y
 :
 clr 0
-if. -.(isia x) *. isiu y do. errret ISI08 return. end.
-'sh r'=. 2{.,y,1
-if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
-r=. (r<0){r,_1  NB. tolerate negs other than _1
-
-NB. column information needed to bind & convert
-if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh return. end.
-assert. 10={:@$ ci
-
-longb=. (x<0){0,-x       NB. special handling for 1 row only
-NB. bind columns for _1 case use (x) buffer size
-buf=. (_1=r){r,(x<0){x,COLUMNBUF
-if. sqlbad z=. ci dbind sh,buf,longb do. SQL_ERROR return. end.
-
-ty=. >6 {"1 ci
-NB. type conversion gerund
-cv=. GCNM {~ GDX i. ; 6 {"1 ci
-if. (0<longb) *. (1=buf) do.
-  cv=. (<,']') (I. ty e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR)} cv
+NB. if y is rank-2, each item in y will be done asynchronusly
+if. 1<#@$ y do.
+  if. 2~:#@$y do. errret ISI08 return. end.
+  if. -.(isia x) *. isiu y do. errret ISI08 return. end.
+  'sh0 r0'=. |: 2{.!.1 "1 y
+  if. 0 e. sh0 e.1{"1 CSPALL do. errret ISI04 return. end.
+  r0=. (r0<0)}r0,:_1  NB. tolerate negs other than _1
+  sync=. 0
+else.
+  if. -.(isia x) *. isiu y do. errret ISI08 return. end.
+  'sh r'=. 2{.,y,1
+  if. -.sh e.1{"1 CSPALL do. errret ISI04 return. end.
+  r=. (r<0){r,_1  NB. tolerate negs other than _1
+  sh0=. ,sh [ r0=. ,r
+  sync=. 1
 end.
 
-one=. 0<r
-dat=. (#ci)#<0 0$0   NB. boolean is the lowest datatype, coerce empty arrays ...
-if. r=0 do. dat return. end.
-fetch=. sh;SQL_FETCH_NEXT;0
-while.do.
+cv0=. 0$0
+ty0=. 0$0
+done=. 0$0
+dat0=. 0$0
+buf0=. 0$0
+for_i. i.#sh0 do.
+  sh=. i{sh0 [ r=. i{r0
+NB. column information needed to bind & convert
+  if. SQL_ERROR-:ci=. getallcolinfo sh do. errret SQL_HANDLE_STMT,sh return. end.
+  assert. 10={:@$ ci
+  longb=. (x<0){0,-x       NB. special handling for longdat only
+NB. bind columns for _1 case use (x) buffer size
+  buf0=. buf0, buf=. (_1=r){r,(x<0){x,COLUMNBUF
+  if. sqlbad z=. ci dbind sh,buf,longb do. SQL_ERROR return. end.
 
-  rc=. >{.sqlfetchscroll fetch
-  if. sqlbad rc do. errret SQL_HANDLE_STMT,sh return. end.
-  if. SQL_NO_DATA=src rc do. ddend sh break. end.
+  ty0=. ty0, < ty=. >6 {"1 ci
+NB. type conversion gerund
+  cv=. GCNM {~ GDX i. ; 6 {"1 ci
+  if. (0<longb) *. (1=buf) do.
+    cv=. (<,']') (I. ty e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR)} cv
+  end.
+  cv0=. cv0, < cv
+
+  dat=. (#ci)#<0 0$0   NB. boolean is the lowest datatype, coerce empty arrays ...
+  done=. done, r=0
+  dat0=. dat0, <dat
+end.
+while. 0 e. done do.
+  stillexec=. 0
+  for_j. I.0=done do.
+    sh=. j{sh0
+    fetch=. sh;SQL_FETCH_NEXT;0
+
+    rc=. >{.sqlfetchscroll fetch
+    if. sqlstillexec rc do. stillexec=. 1 continue. end.
+    if. SQL_NO_DATA=src rc do. done=. 1 j}done [ ddend^:AutoDend sh [ sqlcancel sh continue. end.
+    if. sqlbad rc do.
+      r=. errret SQL_HANDLE_STMT,sh
+      SQL_ERROR [ ddend^:AutoDend sh0 [ sqlcancel"0^:(*@#) sh0 return.
+    end.
 
 NB. actual rows in fetch
-  c=. dddcnt sh
+    c=. {. dddcnt sh
 
 NB. collect & convert data
-  z=. ''
-  for_i. i.#ci do.
-    n=. (i_index{cv) `:0 dddata sh,i+1
-    len=. dddataln sh,i+1
-    if. (1=#len) *. (SQL_NULL_DATA -.@e. len) *. (0<longb) *. (i{ty) e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR do.
-      n=. ,:({.len){.{.n
-    end.
-    if. SQL_NULL_DATA e. len do.
-      if. # ndx=. I. len = SQL_NULL_DATA do.
-        if. 2 = 3!:0 n do.
-          n=. (' '#~{:$n) ndx } n
-        else.
-          if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2,SQL_SS_TIMESTAMPOFFSET do.
-            n=. ((2=UseDayNo){::DateTimeNull;EpochNull) ndx } n
-          elseif. (i{ty) e. SQL_BIT do.
-            n=. 0 ndx } n
-          elseif. 8 = 3!:0 n do.
-            n=. NumericNull ndx } n
-          elseif. 4 = 3!:0 n do.
-            n=. IntegerNull ndx } n
+    cv=. j{::cv0
+    ty=. j{::ty0
+    z=. ''
+    for_i. i.#ci do.
+      n=. (i_index{cv) `:0 dddata sh,i+1
+      len=. dddataln sh,i+1
+      if. (1=#len) *. (SQL_NULL_DATA -.@e. len) *. (0<longb) *. (i{ty) e. SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR do.
+        n=. ,:({.len){.{.n
+      end.
+      if. SQL_NULL_DATA e. len do.
+        if. # ndx=. I. len = SQL_NULL_DATA do.
+          if. 2 = 3!:0 n do.
+            n=. (' '#~{:$n) ndx } n
+          else.
+            if. (i{ty) e. SQL_TYPE_TIMESTAMP,SQL_TYPE_DATE,SQL_TYPE_TIME,SQL_SS_TIME2,SQL_SS_TIMESTAMPOFFSET do.
+              n=. ((2=UseDayNo){::DateTimeNull;EpochNull) ndx } n
+            elseif. (i{ty) e. SQL_BIT do.
+              n=. 0 ndx } n
+            elseif. 8 = 3!:0 n do.
+              n=. NumericNull ndx } n
+            elseif. 4 = 3!:0 n do.
+              n=. IntegerNull ndx } n
+            end.
           end.
         end.
       end.
+      z=. z,< n
     end.
-    z=. z,< n
+    if. c<j{buf0 do. z=. (fat c) {.&.> z end.
+    dat=. >j{dat0
+    dat=. dat ,&.> z
+    dat0=. (<dat) j}dat0
+NB. sometimes sqlserver never return SQL_NO_DATA after the last fetch,
+NB. it continues to return the same row for the next fetch. need to terminate
+    if. 1 [ 0<j{r0 do. if. (0=c) +. c<j{buf0 do. done=. 1 j} done [ ddend^:AutoDend sh [ sqlcancel sh end. end.
   end.
-  if. c<buf do. z=. (fat c) {.&.> z end.
-
-  dat=. dat ,&.> z
-  if. one do. if. c<buf do. ddend sh end. break. end.
+  if. stillexec do. usleep ASYNCDELAYLONG end.
 end.
-assert. 1= # ~. #&> dat
-dat
+assert. (1=#)@:~.@:#&> &> dat0
+>@{.^:sync dat0
 )
 
 
@@ -1503,7 +1725,9 @@ NB. monad:  ddfetch iaSh
 w=. y
 if. -.isia w=. fat w do. errret ISI08 return. end.
 if. -.w e.1{"1 CSPALL do. errret ISI04 return. end.
-if. sqlok1 sqlfetchscroll w;SQL_FETCH_NEXT;0 do. DD_OK else. errret SQL_HANDLE_STMT,y end.
+z=. sqlfetchscroll pa=. w;SQL_FETCH_NEXT;0
+while. sqlstillexec z do. z=. sqlfetchscroll pa [ usleep ASYNCDELAYLONG end.
+if. sqlok1 z do. DD_OK else. errret SQL_HANDLE_STMT,y end.
 )
 
 
@@ -2046,27 +2270,32 @@ cc=. <"1 sh,.>:i.#ty
 dat=. (0,#ty)$<''
 if. r=0 do. dat return. end.
 
-NB. z=. sqlfetch sh
-z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
+z=. sqlfetchscroll pa=. sh;SQL_FETCH_NEXT;0
 while.do.
 
   if. sqlbad rc=. >{.z do.
+    ddend^:AutoDend sh [ sqlcancel sh
     errret SQL_HANDLE_STMT,sh return.
-  end.
-  if. SQL_NO_DATA=src rc do.
-    ddend sh break.
-  end.
-
+  elseif. SQL_NO_DATA=src rc do.
+    sqlcancel sh
+    ddend^:AutoDend sh [ sqlcancel sh break.
+  elseif. sqlstillexec rc do.
+    usleep ASYNCDELAYLONG
+  elseif. sqlok rc do.
 NB. apply gerund to fetch & convert all columns
-  row=. , 1 gf\cc
-  if. badrow row do.
-    errret ISI13 return.
-  end.
-  dat=. dat , 1 {&> row
+    row=. , 1 gf\cc
+    if. badrow row do.
+      errret ISI13 return.
+    end.
+    dat=. dat , 1 {&> row
 
-  if. 0=r=. <:r do. break. end.  NB. _1 case ends on SQL_NO_DATA
-NB.  z=. sqlfetch sh
-  z=. sqlfetchscroll sh;SQL_FETCH_NEXT;0
+    if. 0=r=. <:r do. break. end.  NB. _1 case ends on SQL_NO_DATA
+  elseif.do.
+    echo 'unhandled error code: ',":rc
+    r=. errret ISI14
+    r [ ddend^:AutoDend sh [ sqlcancel sh return.
+  end.
+  z=. sqlfetchscroll pa
 end.
 dat
 )

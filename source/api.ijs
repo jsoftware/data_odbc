@@ -19,6 +19,7 @@ sqlallochandle=: (libodbc, ' SQLAllocHandle s s x *x') &cd
 sqlbindcol=: (libodbc, ' SQLBindCol s x s s * x *') &cd
 sqlbindparameter=: (libodbc, ' SQLBindParameter s x s s s s x s * i *') &cd
 sqlbulkoperations=: (libodbc, ' SQLBulkOperations s x s') &cd
+sqlcancel=: (libodbc, ' SQLCancel s x') &cd
 sqlcolumns=: (libodbc, ' SQLColumns s x * s * s *c s * s') &cd
 sqlconnect=: (libodbc, ' SQLConnect s x *c s *c s *c s') &cd
 sqldatasources=: (libodbc, ' SQLDataSources s x s *c s *s *c s *s') &cd

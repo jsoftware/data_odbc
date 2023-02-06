@@ -79,6 +79,12 @@ if. SQL_ERROR=sh=. getstmt y do.
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
   r return.
 end.
+if. AutoAsync do.
+  rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+  if. sqlbad rc1 do. echo 'ddins fallback to sync' end.
+end.
+
 arraysize=. MAXARRAYSIZE<.rows
 bstname=. 'BINDST_', (cvt2str sh)
 (bstname)=: (arraysize,2)${.a.
@@ -98,12 +104,9 @@ if. -. DD_OK= >@{.rc do.
   r return.
 end.
 
-if. *./128>a.i.sql do.
-  z=. sqlexecdirect sh;bs sql
-else.
-  z=. sqlexecdirectW sh;bs (7&u:sql)
-end.
-
+p=. sh;bs 7&u:^:unipa sql [ unipa=. -. *./128>a.i. sql
+rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+while. sqlstillexec z do. z=. sqlexecdirect`sqlexecdirectW@.unipa pa [ usleep ASYNCDELAYLONG end.
 if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -381,7 +384,9 @@ NB. SQLSVR need specific precision for date time fields
         r return.
       end.
     end.
-    if. SQL_SUCCESS~: src >@{. z=. sqlbulkoperations sh;SQL_ADD do.
+    z=. sqlbulkoperations pa=. sh;SQL_ADD
+    while. sqlstillexec z do. z=. sqlbulkoperations pa [ usleep ASYNCDELAYLONG end.
+    if. SQL_SUCCESS~: src >@{. z do.
       erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
       if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
       r return.
@@ -400,37 +405,51 @@ NB. y sh, icol
 NB. return  catalog schema basetable column column_id(1-base) datatype columnsize decimaldigit nullable
 NB. return  catalog database table org_table name org_name column-id(1-base) typename coltype length decimals nullable def nativetype nativeflags
 getcolinfo1=: 3 : 0"1
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_CATALOG_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_CATALOG_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   catalog=. ''
 else.
   catalog=. dtb (fat 6{::z){.4{::z
 end.
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_SCHEMA_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_SCHEMA_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   schema=. ''
 else.
   schema=. dtb (fat 6{::z){.4{::z
 end.
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_TABLE_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_TABLE_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   table=. ''
 else.
   table=. dtb (fat 6{::z){.4{::z
 end.
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_BASE_TABLE_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_BASE_TABLE_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   org_table=. ''
 else.
   org_table=. dtb (fat 6{::z){.4{::z
 end.
-NB. if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+NB. z=. sqlcolattribute pa=. (b0 y),SQL_DESC_NAME;(bs 128#' '), (,2-2) (;<) <0
+NB. while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+NB. if. sqlbad z do.
 NB.   column=. ''
 NB. else.
 NB.   column=. dtb (fat 6{::z){.4{::z
 NB. end.
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_BASE_COLUMN_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_BASE_COLUMN_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   org_column=. ''
 else.
   org_column=. dtb (fat 6{::z){.4{::z
 end.
-if. sqlbad z=. sqlcolattribute (b0 y),SQL_DESC_TYPE_NAME;(bs 128#' '), (,2-2) (;<) <0 do.
+z=. sqlcolattribute pa=. (b0 y),SQL_DESC_TYPE_NAME;(bs 128#' '), (,2-2) (;<) <0
+while. sqlstillexec z do. z=. sqlcolattribute pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   typename=. ''
 else.
   typename=. dtb (fat 6{::z){.4{::z
@@ -443,7 +462,9 @@ NB. also get base table name
 NB. y ch  x sh
 getallcolinfo1=: 4 : 0
 ch=. y [ sh=. x
-if. sqlbad z=. sqlnumresultcols sh;,0 do.
+z=. sqlnumresultcols pa=. sh;,0
+while. sqlstillexec z do. sqlnumresultcols pa [ usleep ASYNCDELAY end.
+if. sqlbad z do.
   SQL_ERROR
 else.
   z=. getcolinfo1 sh,.1+i. 2{::z
@@ -475,28 +496,86 @@ NB. base table name appended
 NB. x select statement
 NB. return  catalog database table org_table name org_name column-id(1-base) typename coltype length decimals nullable def nativetype nativeflags
 ddcoltype=: 4 : 0
+NB. test arguments
 clr 0
-if. -.y e.CHALL do. errret ISI03 return. end.
-if. -. iscl sql=. x do. errret ISI08 return. end.
-if. SQL_ERROR=sh=. getstmt y do. errret SQL_HANDLE_DBC,y return. end.
-if. *./128>a.i.sql do.
-  z=. sqlexecdirect sh;bs sql
+if. 32=3!:0 x do.
+  if. -. (0 4 e.~ 3!:0 w0=. ,y) *. *./ iscl&> x do. errret ISI08 return. end.
+  if. 1=#w0 do. w0=. ({.w0)#~#x end.
+  if. w0 ~:&# x do. errret ISI08 return. end.
+  x0=. x
+  sync=. 0
 else.
-  z=. sqlexecdirectW sh;bs (7&u:sql)
+  if. -.(isia w=. fat y) *. iscl x do. errret ISI08 return. end.
+  if. -.w e. CHALL do. errret ISI03 return. end.
+  w0=. ,w
+  x0=. <x
+  sync=. 1
 end.
-if. sqlbad z do.
-  r=. errret SQL_HANDLE_STMT,sh
-  r [ freestmt sh return.
+erase 'x';'y'
+
+if. 0 e. w0 e. CHALL do. errret ISI03 return. end.
+sh0=. 0$0
+pending=. 0 5$0
+for_x1. x0 do.
+  x=. ,>x1
+NB. attempt to execute and return statement handle
+  w=. x1_index{w0
+  if. SQL_ERROR=sh=. getstmt w do. errret SQL_HANDLE_DBC,w [ freestmt"0^:(*@#sh0) sh0 return. end.
+  if. AutoAsync +. -.sync do.
+    rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+    if. 0 [ sqlbad rc1 do. errret SQL_HANDLE_STMT,sh [ freestmt"0^:(*@#sh0) sh0 return. end.
+    if. sqlbad rc1 do. echo 'ddcoltype fallback to sync' end.
+  end.
+  p=. sh;bs 7&u:^:unipa x [ unipa=. -. *./128>a.i. x
+  rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+  if. -. sqlbad rc do.
+    sh0=. sh0, sh
+    if. sqlok rc do.
+    elseif. sqlstillexec rc do. pending=. pending, x1_index;unipa;p
+    elseif.do.
+      r=. errret SQL_HANDLE_STMT,sh   NB. unknown error
+      r [ freestmt"0^:(*@#) sh,sh0 [ sqlcancel"0^:(*@#) sh,sh0 return.
+    end.
+  else.
+    r=. errret SQL_HANDLE_STMT,sh
+    r [ freestmt"0^:(*@#) sh,sh0 [ sqlcancel"0^:(*@#) sh,sh0 return.
+  end.
 end.
-if. SQL_ERROR-:ci=. sh getallcolinfo1 y do.
-  z=. errret SQL_HANDLE_STMT,sh
-else.
-  assert. 15={:@$ci
-  assert. 1= #@$&> ,ci
-  z=. ci
+z=. (#sh0)#<''
+while. #pending do.
+
+  fini=. 0 5$0
+  for_p1. pending do.
+    p=. 2}.p1 [ 'x1_index unipa'=. 2{.p1
+    rc=. sqlexecdirect`sqlexecdirectW@.unipa p
+    if. sqlok rc do.
+      fini=. fini, p1
+      w=. x1_index{w0
+      if. SQL_ERROR-:ci=. sh getallcolinfo1 w do.
+        r=. errret SQL_HANDLE_STMT,sh
+        r [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return.
+      else.
+        assert. 15={:@$ci
+        assert. 1= #@$&> ,ci
+        z=. (<ci) x1_index} z
+        freestmt sh [ sqlcancel sh
+      end.
+    elseif. sqlbad rc do.
+      r=. errret SQL_HANDLE_STMT,>{.p
+      r [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return.
+    elseif. sqlstillexec rc do.
+    elseif.do.
+      echo 'unhandled error code: ',":>{.rc
+      r=. errret ISI14
+      r [ freestmt"0^:(*@#) sh0 [ sqlcancel"0^:(*@#) sh0 return.
+    end.
+  end.
+  pending=. pending -. fini
+  if. (*@#pending) do. usleep ASYNCDELAYLONG end.
+
 end.
-freestmt sh
-z
+>@{.^:sync z
 )
 
 NB.* ddsparm v
@@ -578,6 +657,12 @@ if. SQL_ERROR=sh=. getstmt y do.
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
   r return.
 end.
+if. AutoAsync do.
+  rc1=. sqlsetstmtattr sh;SQL_ATTR_ASYNC_ENABLE;SQL_ASYNC_ENABLE_ON;SQL_IS_INTEGER
+NB. fallback to sync
+  if. sqlbad rc1 do. echo 'ddparm fallback to sync' end.
+end.
+
 
 'datadriver dsn uid server name ver drvname drvver charset chardiv bugflag'=. }.DBMSALL{~(>0{("1) DBMSALL)i. y
 dbmsname=. name
@@ -896,11 +981,9 @@ NB. SQLSVR need specific precision for date time fields
     r return.
   end.
 end.
-if. *./128>a.i.sql do.
-  z=. sqlprepare sh;bs sql
-else.
-  z=. sqlprepareW sh;bs (7&u:sql)
-end.
+p=. sh;bs 7&u:^:unipa sql [ unipa=. -. *./128>a.i. sql
+rc=. sqlprepare`sqlprepareW@.unipa p
+while. sqlstillexec z do. z=. sqlprepare`sqlprepareW@.unipa pa [ usleep ASYNCDELAYLONG end.
 if. sqlbad z do.
   erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
   if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
@@ -922,7 +1005,9 @@ while. k<nrows do.
       end.
     end.
   end.
-  if. sqlbad z=. sqlexecute <sh do.
+  z=. sqlexecute pa=. <sh
+  while. sqlstillexec z do. z=. sqlexecute pa [ usleep ASYNCDELAYLONG end.
+  if. sqlbad z do.
     erasebind sh [ freestmt sh [ r=. errret SQL_HANDLE_STMT,sh
     if. loctran do. CHTR=: CHTR-. y [ SQL_ROLLBACK comrbk y end.
     r return.

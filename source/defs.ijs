@@ -134,9 +134,15 @@ SQL_ASYNC_ENABLE=: 4
 SQL_ATTR_ASYNC_ENABLE=: 4
 SQL_ASYNC_ENABLE_OFF=: 0
 SQL_ASYNC_ENABLE_ON=: 1
+SQL_ASYNC_MODE=: 10021
+SQL_AM_CONNECTION=: 1    NB. Bitmasks for SQL_ASYNC_MODE
+SQL_AM_STATEMENT=: 2
+SQL_MAX_ASYNC_CONCURRENT_STATEMENTS=: 10022
 
 NB. Note: setting good buffer sizes can signficantly improve performance.
 COLUMNBUF=: 20000    NB. default row size of bound column buffers
 LONGBUF=: 1000000    NB. default buffer size for long datatypes
 SHORTBUF=: 8000      NB. default buffer size for short datatypes
 MAXARRAYSIZE=: 65535
+ASYNCDELAY=: 10000      NB. microsecond delay after async SQL_STILL_EXECUTING
+ASYNCDELAYLONG=: 1e6    NB. microsecond delay after async SQL_STILL_EXECUTING for sqlexecdirect etc

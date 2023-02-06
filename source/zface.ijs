@@ -66,7 +66,7 @@ else.
   wrds=. wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
   if. -.setz do. wrds=. '' end.
   wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-  wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
+  wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' AutoAsync DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
   ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
   r
 end.
@@ -78,16 +78,17 @@ NB. replace z locale names defined by jdd/ODBC locale.
 setzlocale=: 3 : 0
 setz=. 1
 if. 0=4!:0<'ODBCSETZLOCALE' do.
-  if. 0=ODBCSETZLOCALE do. setz=. 0  end.
+  if. 0=ODBCSETZLOCALE do. setz=. 0 end.
 end.
 cl=. '_jdd_'
 wrds=. 'ddsrc ddtbl ddtblx ddcol ddcon dddis ddfch ddend ddsel ddcnm dderr'
 wrds=. wrds, ' dddrv ddsql ddcnt ddtrn ddcom ddrbk ddbind ddfetch'
 wrds=. wrds ,' dddata ddfet ddbtype ddcheck ddrow ddins ddparm ddsparm dddbms ddcolinfo ddttrn'
+wrds=. wrds ,' ddttrn ddprep ddparm ddsparm ddput ddgetinfo ddcolinfo'
 wrds=. wrds ,' ddsetconnectattr ddgetconnectattr dddriver ddconfig ddcoltype ddtypeinfo ddtypeinfox'
 if. -.setz do. wrds=. '' end.
 wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
-wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
+wrds=. >;: wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' AutoAsync DateTimeNull IntegerNull NumericNull FraSecond OffsetMinute UseErrRet UseDayNo UseUnicode CHALL'
 ". (wrds ,("1) '_z_ =: ',("1) wrds ,("1) cl) -.("1) ' '
 EMPTY
 )

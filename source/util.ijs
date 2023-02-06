@@ -21,6 +21,7 @@ sqlbad=: 13 : '(src >{. y) e. DD_ERROR'
 sqlok=: 13 : '(src >{. y) e. DD_SUCCESS'
 sqlok1=: 13 : '(src >{. y) e. DD_SUCCESS1'
 sqlsuccess=: 13 : '(src >{. y) e. SQL_SUCCESS'
+sqlstillexec=: 13 : '(src >{. y) e. SQL_STILL_EXECUTING'
 
 NB. returns 1 if argument is a character list or atom 0 otherwise
 iscl=: e.&(2 131072 262144)@(3!:0) *. 1: >: [: # $
