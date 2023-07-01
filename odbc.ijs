@@ -42,7 +42,7 @@ if. 0~: 4!:0<'PREFER_IODBC' do.
   PREFER_IODBC=. 0
 end.
 select. UNAME
-case. 'Linux' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.so.2';'libodbc.so.2'
+case. 'Linux';'FreeBSD';'OpenBSD' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.so.2';'libodbc.so.2'
 case. 'Darwin' do. libodbc=: (0-:PREFER_IODBC){::'libiodbc.dylib';'libodbc.dylib'
 case. 'Win' do. libodbc=: 'odbc32.dll'
 case. do. libodbc=: 'libodbc.so'
