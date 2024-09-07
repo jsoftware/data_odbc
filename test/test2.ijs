@@ -9,7 +9,7 @@ wrds=. wrds ,' userfn sqlbad sqlok sqlres sqlresok'
 wrds=. wrds , ' ', ;:^:_1 ('get'&,)&.> ;: ' DateTimeNull IntegerNull NumericNull UseErrRet UseDayNo UseUnicode CHALL'
 wrds=. > ;: wrds
 4!:55 wrds ,&.> <'_z_'
-18!:55 <'jdd'
+271828&(18!:55) ::(18!:55) ::0: <'jdd'
 
 load 'data/odbc'
 
