@@ -102,8 +102,8 @@ elseif. type e. SQL_CHAR,SQL_VARCHAR do.
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_DECIMAL,SQL_NUMERIC do.
   if. UseNumeric do.
-    len=. 8 [ tartype=. SQL_C_DOUBLE
-    (bname)=: (rows,1)$1.5-1.5
+    len=. 23 [ tartype=. SQL_C_CHAR
+    (bname)=: (rows,len)$' '
   else.
     len=. fat >:precision [ tartype=. SQL_C_CHAR
     (bname)=: (rows,len)$' '
@@ -124,13 +124,8 @@ elseif. type e. SQL_BIGINT do.
     len=. 8 [ tartype=. SQL_C_SBIGINT
     (bname)=: (rows,1)$2-2
   else.
-    if. UseNumeric do.
-      len=. 8 [ tartype=. SQL_C_DOUBLE
-      (bname)=: (rows,1)$1.5-1.5
-    else.
-      len=. 1+ fat >:precision [ tartype=. SQL_C_CHAR
-      (bname)=: (rows,len)$' '
-    end.
+    len=. 8 [ tartype=. SQL_C_DOUBLE
+    (bname)=: (rows,1)$1.5-1.5
   end.
 elseif. type e. SQL_TYPE_TIMESTAMP do.
   len=. 16 [ tartype=. SQL_C_TYPE_TIMESTAMP
@@ -150,12 +145,15 @@ elseif. type e. SQL_SS_TIMESTAMPOFFSET do.
 elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
   len=. fat >: wchar2char * precision [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
-elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
+elseif. type e. SQL_DOUBLE,SQL_FLOAT do.
   len=. 8 [ tartype=. SQL_C_DOUBLE
   (bname)=: (rows,1)$2.5-2.5
+elseif. type e. SQL_REAL do.
+  len=. 4 [ tartype=. SQL_C_FLOAT
+  (bname)=: (rows,len)$' '
 elseif. type e. SQL_BIT do.
   len=. 1 [ tartype=. SQL_C_BIT
-  (bname)=: (rows,len)$0
+  (bname)=: (rows,len)$' '
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
@@ -547,6 +545,20 @@ while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
 z=. (<8&u: 6&u: 1:{z) 1} z
 if. sqlok z do. trimdat z else. z end.
 )
+datcharnum=: 3 : 0"1
+z=. sqlgetdata pa=. (b0 y),SQL_C_CHAR;(23' ');(>:23);,0
+while. sqlstillexec z do. z=. sqlgetdata pa [ usleep ASYNCDELAY end.
+if. sqlok z do.
+  if. SQL_NULL_DATA= _1{::z do.
+    (<NumericNull) 1} z
+  else.
+    z=. trimdat z
+    (<rnnum2 1{::z) 1} z
+  end.
+else.
+  z
+end.
+)
 datdouble=: 3 : 0"1
 z=. gc sqlgetdata pa=. (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
@@ -849,8 +861,8 @@ getuniqueid=: datchar&.>
 getempty=: 3 : 0
 <DD_OK ; '' ; 0
 )
-iad=: 15!:14@boxopen
-vad=: <@:iad
+symdad=: 15!:14@boxopen
+vad=: <@:symdad
 getcolinfo=: 3 : 0"1
 z=. sqldescribecol pa=. (b0 y),(bs 128$' '),5#<,0
 while. sqlstillexec z do. z=. sqldescribecol pa [ usleep ASYNCDELAY end.
@@ -1401,8 +1413,8 @@ brfname=. 'BINDRR_',":sh
 et=. SQL_HANDLE_STMT,sh
 if. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_BIND_TYPE;SQL_BIND_BY_COLUMN;0 do. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_ARRAY_SIZE;r;0 do. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(iad bstname);0 do. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROWS_FETCHED_PTR;(iad brfname);0 do. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(symdad bstname);0 do. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROWS_FETCHED_PTR;(symdad brfname);0 do. errret et
 end.
 if. sqlbad rc=. sqlgetstmtattr sh;SQL_ATTR_USE_BOOKMARKS;(,_1);SZI;(,_1) do. errret et
 elseif. SQL_UB_VARIABLE = (0< {.>@{:rc){0,3{::rc do.
@@ -1674,7 +1686,7 @@ if. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_BIND_TYPE;SQL_BIND_BY_COLUMN;0 do. rc=
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_DYNAMIC;0 do. rc=. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_CONCURRENCY;SQL_CONCUR_LOCK;0 do. rc=. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_ARRAY_SIZE;arraysize;0 do. rc=. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(iad bstname);0 do. rc=. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(symdad bstname);0 do. rc=. errret et
 elseif.do. rc=. DD_OK
 end.
 
@@ -2527,9 +2539,9 @@ while. k<nrows do.
         name=. (cvt2str sh),'_',":i
         bname=. 'BIND_',name
         blname=. 'BINDLN_',name
-        v=. iad bname
+        v=. symdad bname
         (memr v, (k*i{bytelen), i{bytelen) memw v, 0, i{bytelen
-        v=. iad blname
+        v=. symdad blname
         (memr v, (SZI*k), SZI) memw v, 0, SZI
       end.
     end.
@@ -2631,6 +2643,7 @@ SQL_DESC_TYPE_NAME=: 14
 SQL_SIGNED_OFFSET=: _20
 SQL_C_BIT=: _7
 SQL_C_CHAR=: 1
+SQL_C_FLOAT=: 7
 SQL_C_DOUBLE=: 8
 SQL_C_LONG=: 4
 SQL_C_SLONG=: (SQL_C_LONG+SQL_SIGNED_OFFSET)
@@ -2809,16 +2822,16 @@ GCNM=: GCNM,;:'trctnbw     trctnbw   trctguid'
 
 GDX=: GDX , SQL_DECIMAL, SQL_NUMERIC, SQL_DOUBLE, SQL_FLOAT, SQL_REAL
 if. UseNumeric do.
-  GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+  GCNM=: GCNM , ;:'rnnum2   rnnum2       ]           ]        ffs'
 else.
-  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]          ]'
+  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]        ffs'
 end.
 if. IF64 do.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:' ]        ifi       ifi           ifi         ]'
+  GCNM=: GCNM , ;:'bfi       ifi       ifi           ifi         ]'
 else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
+  GCNM=: GCNM , ;:'bfi        ]      ]             ]            ]'
 end.
 GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR
 GCNM=: GCNM , ;:' emptyrk1   emptyrk1            emptyrk1'
@@ -2833,15 +2846,11 @@ datbigint=: ('datbigint',(IF64*.UseBigInt){::'32';SFX)~ f.
 if. IF64*.UseBigInt do.
   getbigint=: datbigint&.>
 else.
-  if. UseNumeric do.
-    getbigint=: datbigint&.>
-  else.
-    getbigint=: datchar&.>
-  end.
+  getbigint=: datcharnum&.>
 end.
 if. UseNumeric do.
-  getdecimal=: datdouble&.>
-  getnumeric=: datdouble&.>
+  getdecimal=: datcharnum&.>
+  getnumeric=: datcharnum&.>
 else.
   getdecimal=: datchar&.>
   getnumeric=: datchar&.>
@@ -2867,10 +2876,12 @@ isia=: isua *. isiu
 isnu=: 3!:0 e. 1 4 8"_
 isna=: isua *. isnu
 iscu=: (e.&2 131072 262144)@(3!:0)
+bfi=: [: ,. [: ({.a.)&~: ,
 ifs=: [: ,. [: _1&ic ,
 ifi=: [: ,. [: _2&ic ,
 ffs=: [: ,. [: _1&fc ,
 rnnum=: (-."1 0)&({.a.)
+rnnum2=: [: ,. [: 0&". ((-."1 0)&({.a.))
 dts=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
 dtsx=: ((6 ,~ #) $ [: _1&ic [: , 12{."1 ]) ,. ([: _2&ic [: , 12 13 14 15{"1 ])
 ddts=: 13 : '((#y),3) $ _1&ic , 6{.("1) y'

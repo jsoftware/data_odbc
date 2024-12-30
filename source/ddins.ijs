@@ -94,7 +94,7 @@ if. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_BIND_TYPE;SQL_BIND_BY_COLUMN;0 do. rc=
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_CURSOR_TYPE;SQL_CURSOR_DYNAMIC;0 do. rc=. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_CONCURRENCY;SQL_CONCUR_LOCK;0 do. rc=. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_ARRAY_SIZE;arraysize;0 do. rc=. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(iad bstname);0 do. rc=. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(symdad bstname);0 do. rc=. errret et
 elseif.do. rc=. DD_OK
 end.
 
@@ -998,9 +998,9 @@ while. k<nrows do.
         name=. (cvt2str sh),'_',":i
         bname=. 'BIND_',name
         blname=. 'BINDLN_',name
-        v=. iad bname
+        v=. symdad bname
         (memr v, (k*i{bytelen), i{bytelen) memw v, 0, i{bytelen
-        v=. iad blname
+        v=. symdad blname
         (memr v, (SZI*k), SZI) memw v, 0, SZI
       end.
     end.

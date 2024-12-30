@@ -3,7 +3,7 @@ NB. ddfns
 NB. =========================================================
 bindcol=: 4 : 0"1 1
 
-NB. (bindcol) binds columns in the result set to J nouns.
+NB. (bindcol) binds columns in the result set to J nouns.  (ddfch)
 NB. The result is a set of globals BIND_sh_col and BINDLN_sh_col
 NB. bound to the statement that are used for fetched data
 NB. and erased when the (sh) is freed (ddend or dddis).
@@ -34,8 +34,10 @@ elseif. type e. SQL_CHAR,SQL_VARCHAR do.
   (bname)=: (rows,len)$' '
 elseif. type e. SQL_DECIMAL,SQL_NUMERIC do.
   if. UseNumeric do.
-    len=. 8 [ tartype=. SQL_C_DOUBLE
-    (bname)=: (rows,1)$1.5-1.5
+NB.     len=. 8 [ tartype=. SQL_C_DOUBLE
+NB.     (bname)=: (rows,1)$1.5-1.5
+    len=. 23 [ tartype=. SQL_C_CHAR
+    (bname)=: (rows,len)$' '
   else.
     len=. fat >:precision [ tartype=. SQL_C_CHAR
     (bname)=: (rows,len)$' '
@@ -56,13 +58,15 @@ elseif. type e. SQL_BIGINT do.
     len=. 8 [ tartype=. SQL_C_SBIGINT
     (bname)=: (rows,1)$2-2
   else.
-    if. UseNumeric do.
-      len=. 8 [ tartype=. SQL_C_DOUBLE
-      (bname)=: (rows,1)$1.5-1.5
-    else.
-      len=. 1+ fat >:precision [ tartype=. SQL_C_CHAR   NB. ??? need extra 1 space otherwise overflow
-      (bname)=: (rows,len)$' '
-    end.
+NB.     if. UseNumeric do.
+NB.       len=. 8 [ tartype=. SQL_C_DOUBLE
+NB.       (bname)=: (rows,1)$1.5-1.5
+NB.     else.
+NB.       len=. 1+ fat >:precision [ tartype=. SQL_C_CHAR   NB. ??? need extra 1 space otherwise overflow
+NB.       (bname)=: (rows,len)$' '
+NB.     end.
+    len=. 8 [ tartype=. SQL_C_DOUBLE
+    (bname)=: (rows,1)$1.5-1.5
   end.
 elseif. type e. SQL_TYPE_TIMESTAMP do.
 NB. is a C structure
@@ -83,12 +87,15 @@ elseif. type e. SQL_SS_TIMESTAMPOFFSET do.
 elseif. type e. SQL_WCHAR,SQL_WVARCHAR do.
   len=. fat >: wchar2char * precision [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
-elseif. type e. SQL_DOUBLE,SQL_FLOAT,SQL_REAL do.
+elseif. type e. SQL_DOUBLE,SQL_FLOAT do.
   len=. 8 [ tartype=. SQL_C_DOUBLE
   (bname)=: (rows,1)$2.5-2.5
+elseif. type e. SQL_REAL do.  NB. SQL_REAL convert to SQL_C_DOUBLE is in odbc driver
+  len=. 4 [ tartype=. SQL_C_FLOAT
+  (bname)=: (rows,len)$' '
 elseif. type e. SQL_BIT do.
   len=. 1 [ tartype=. SQL_C_BIT
-  (bname)=: (rows,len)$0
+  (bname)=: (rows,len)$' '
 elseif. type e. SQL_UNIQUEID do.
   len=. 37 [ tartype=. SQL_C_CHAR
   (bname)=: (rows,len)$' '
@@ -733,6 +740,22 @@ if. sqlok z do. trimdat z else. z end.
 )
 
 NB. =========================================================
+datcharnum=: 3 : 0"1
+z=. sqlgetdata pa=. (b0 y),SQL_C_CHAR;(23' ');(>:23);,0    NB. should be safe for 19 decimal digit + sign + dot
+while. sqlstillexec z do. z=. sqlgetdata pa [ usleep ASYNCDELAY end.
+if. sqlok z do.
+  if. SQL_NULL_DATA= _1{::z do.
+    (<NumericNull) 1} z
+  else.
+    z=. trimdat z
+    (<rnnum2 1{::z) 1} z
+  end.
+else.
+  z
+end.
+)
+
+NB. =========================================================
 datdouble=: 3 : 0"1
 z=. gc sqlgetdata pa=. (b0 y),SQL_C_DOUBLE;(,1.5-1.5);8;,0
 while. sqlstillexec z do. z=. gc sqlgetdata pa [ usleep ASYNCDELAY end.
@@ -1092,16 +1115,16 @@ getempty=: 3 : 0
 )
 
 NB. =========================================================
-NB. (iad) integer address - returns pointer to a J array
+NB. get address of data for name
 NB.
-NB. monad:  iaAdd =. iadd clNoun
+NB. monad:  iaAdd =. symdad  clNoun
 NB.
 NB.   boo =. 'some data here ehhh!'
-NB.   iad 'boo'
-iad=: 15!:14@boxopen   NB. integer address of real data of a J noun
+NB.   symdad 'boo'
+symdad=: 15!:14@boxopen   NB. integer address of real data of a J noun
 
 NB. =========================================================
-vad=: <@:iad  NB. boxed address
+vad=: <@:symdad  NB. boxed address
 
 NB. =========================================================
 
@@ -1687,7 +1710,7 @@ end.
 NB. =========================================================
 dbind=: 4 : 0
 
-NB. (dbind) binds columns in statement handle
+NB. (dbind) binds columns in statement handle  (ddfch)
 NB.
 NB. dyad:  btGetcolinfo bind ilShn
 NB.
@@ -2044,8 +2067,8 @@ NB. set up statement handle for column-wise binding
 et=. SQL_HANDLE_STMT,sh
 if. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_BIND_TYPE;SQL_BIND_BY_COLUMN;0 do. errret et
 elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_ARRAY_SIZE;r;0 do. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(iad bstname);0 do. errret et
-elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROWS_FETCHED_PTR;(iad brfname);0 do. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROW_STATUS_PTR;(symdad bstname);0 do. errret et
+elseif. sqlbad sqlsetstmtattr sh;SQL_ATTR_ROWS_FETCHED_PTR;(symdad brfname);0 do. errret et
 end.
 if. sqlbad rc=. sqlgetstmtattr sh;SQL_ATTR_USE_BOOKMARKS;(,_1);SZI;(,_1) do. errret et
 elseif. SQL_UB_VARIABLE = (0< {.>@{:rc){0,3{::rc do.

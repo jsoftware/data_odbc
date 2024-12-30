@@ -39,6 +39,9 @@ isnu=: 3!:0 e. 1 4 8"_
 isna=: isua *. isnu
 iscu=: (e.&2 131072 262144)@(3!:0)
 
+NB. convert char columns to boolean columns
+bfi=: [: ,. [: ({.a.)&~: ,
+
 NB. convert short integer columns to integer columns
 ifs=: [: ,. [: _1&ic ,
 
@@ -50,6 +53,9 @@ ffs=: [: ,. [: _1&fc ,
 
 NB. remove all {.a. from numeric fields when UseNumerc is false
 rnnum=: (-."1 0)&({.a.)
+
+NB. remove all {.a. from text numeric fields and convert to number
+rnnum2=: [: ,. [: 0&". ((-."1 0)&({.a.))
 
 NB.   typedef struct tagTIMESTAMP_STRUCT {
 NB.     SQLSMALLINT year;

@@ -59,7 +59,7 @@ SQL_VARBINARY=: _3['*'     NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_LONGVARBINARY=:_4['*'  NB. SQL_C_BINARY         SQL_C_CHAR    1     ]
 SQL_BIGINT=: _5['*'        NB. SQL_C_SBIGINT        SQL_C_CHAR    1     ]
 SQL_TINYINT=: _6['*'       NB. SQL_C_STINYINT       SQL_C_CHAR    1     ]
-SQL_BIT=: _7['*'           NB. SQL_C_BIT            SQL_C_CHAR    1     ]
+SQL_BIT=: _7['*'           NB. SQL_C_BIT            SQL_C_BIT     1     ]
 SQL_WCHAR=: _8['*'         NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     ]
 SQL_WVARCHAR=: _9['*'      NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     trctnb trbuclnb
 SQL_WLONGVARCHAR=: _10['*' NB. SQL_C_WCHAR          +:SQL_C_CHAR  2     ]
@@ -104,18 +104,18 @@ GCNM=: GCNM,;:'trctnbw     trctnbw   trctguid'
 
 GDX=: GDX , SQL_DECIMAL, SQL_NUMERIC, SQL_DOUBLE, SQL_FLOAT, SQL_REAL
 if. UseNumeric do.
-  GCNM=: GCNM , ;:']        ]            ]           ]          ]'
+  GCNM=: GCNM , ;:'rnnum2   rnnum2       ]           ]        ffs'
 else.
-  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]          ]'
+  GCNM=: GCNM , ;:'rnnum    rnnum        ]           ]        ffs'
 end.
 
 NB. handle 4 byte integers in J64
 if. IF64 do.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:' ]        ifi       ifi           ifi         ]'
+  GCNM=: GCNM , ;:'bfi       ifi       ifi           ifi         ]'
 else.
   GDX=: GDX , SQL_BIT, SQL_TINYINT, SQL_SMALLINT, SQL_INTEGER, SQL_BIGINT
-  GCNM=: GCNM , ;:' ]         ]      ]             ]            ]'
+  GCNM=: GCNM , ;:'bfi        ]      ]             ]            ]'
 end.
 GDX=: GDX , SQL_LONGVARCHAR, SQL_LONGVARBINARY, SQL_WLONGVARCHAR
 GCNM=: GCNM , ;:' emptyrk1   emptyrk1            emptyrk1'
@@ -134,15 +134,18 @@ datbigint=: ('datbigint',(IF64*.UseBigInt){::'32';SFX)~ f.
 if. IF64*.UseBigInt do.
   getbigint=: datbigint&.>
 else.
-  if. UseNumeric do.
-    getbigint=: datbigint&.>
-  else.
-    getbigint=: datchar&.>
-  end.
+NB.   if. UseNumeric do.
+NB.     getbigint=: datbigint&.>
+NB.   else.
+NB.     getbigint=: datchar&.>
+NB.   end.
+  getbigint=: datcharnum&.>
 end.
 if. UseNumeric do.
-  getdecimal=: datdouble&.>
-  getnumeric=: datdouble&.>
+NB.   getdecimal=: datdouble&.>
+NB.   getnumeric=: datdouble&.>
+  getdecimal=: datcharnum&.>
+  getnumeric=: datcharnum&.>
 else.
   getdecimal=: datchar&.>
   getnumeric=: datchar&.>
